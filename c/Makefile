@@ -4,7 +4,8 @@ build/libvst_loader.a: build/vst_loader.o
 	ar rcs build/libvst_loader.a  build/vst_loader.o	
 
 build/vst_loader.o: vst_loader.c vst_loader.h   
-	gcc -c -o $@ $< -I.
+	# on defining away __cdecl: https://stackoverflow.com/questions/10789012/g-cdecl-calling-convention-with-steinberg-vst-sdk
+	cc -c -o $@ $< -I. -Ivendor/vstsdk/pluginterfaces/vst2.x/ -D__cdecl=""
 
 vendor/vstsdk: vendor/vstsdk.zip
 	unzip vendor/vstsdk.zip -d vendor
