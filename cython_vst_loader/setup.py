@@ -10,7 +10,8 @@ include_paths = [
 ]
 
 ext_modules = cythonize(
-    'vst_loader_wrapper.pyx'
+    'vst_loader_wrapper.pyx',
+    compiler_directives={'language_level': "3"}
 )
 
 # workaround for https://github.com/cython/cython/issues/1480
