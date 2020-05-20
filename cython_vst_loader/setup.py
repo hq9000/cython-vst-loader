@@ -17,5 +17,8 @@ ext_modules = cythonize(
 # workaround for https://github.com/cython/cython/issues/1480
 for module in ext_modules:
     module.include_dirs = include_paths
+    module.extra_compile_args = [
+        "-Wno-unused-function"
+    ]
 
 setup(ext_modules=ext_modules)
