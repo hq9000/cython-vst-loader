@@ -17,10 +17,16 @@ def register_host_callback(python_host_callback: Callable)->void:
     :param python_host_callback:
     :return:
     """
+    global _python_host_callback
     _python_host_callback = python_host_callback
 
+def hello_world():
+    print("hello world from cython")
+    return 123
+
 def create_plugin(path_to_so: bytes)->int:
-    if python_host_callback is None:
+    global _python_host_callback
+    if _python_host_callback is None:
        raise Exception('python callback is None')
 
     c_plugin_pointer = _load_vst(path_to_so)
