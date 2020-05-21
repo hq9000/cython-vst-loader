@@ -5,6 +5,7 @@ from libc.stdint cimport int64_t, int32_t
 from cython_vst_loader.vst_host import host_callback as python_host_callback
 from cython_vst_loader.vst_constants import AEffectOpcodes
 from cython_vst_loader.vst_event import VstEvent as PythonVstEvent, VstMidiEvent as PythonVstMidiEvent
+import os.path
 
 # https://github.com/simlmx/pyvst/blob/ded9ff373f37d1cbe8948ccb053ff4849f45f4cb/pyvst/vstplugin.py#L23
 # define kEffectMagic CCONST ('V', 's', 't', 'P')
@@ -25,6 +26,10 @@ def hello_world():
     return 123
 
 def create_plugin(path_to_so: bytes)->int:
+
+    if not os.path.exists(path_to_so):
+        raise Exception('plugin file does not exist')
+
     global _python_host_callback
     if _python_host_callback is None:
        raise Exception('python callback is None')
@@ -168,12 +173,15 @@ cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index,
 ctypedef AEffect *(*vstPluginFuncPtr)(audioMasterCallback host)
 
 
-cdef AEffect *_load_vst(char *path_to_so):
+cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*>0:
     cdef char *entry_function_name = "VSTPluginMain"
     cdef void *handle = dlopen(path_to_so, RTLD_LAZY)
     cdef vstPluginFuncPtr entry_function = <vstPluginFuncPtr> dlsym(handle, "VSTPluginMain")
-    cdef AEffect *plugin_ptr = entry_function(_c_host_callback)
 
+    if entry_function is NULL:
+        raise Exception('null pointer when looking up entry function')
+
+    cdef AEffect *plugin_ptr = entry_function(_c_host_callback)
     return plugin_ptr
 
 cdef _start_plugin(AEffect *plugin):
