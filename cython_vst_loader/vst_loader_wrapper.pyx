@@ -1,8 +1,10 @@
-from typing import Callable
+from typing import Callable, List
+from libc.stdlib cimport malloc, free
 from posix.dlfcn cimport dlopen, dlsym, RTLD_LAZY
 from libc.stdint cimport int64_t, int32_t
 from cython_vst_loader.vst_host import host_callback as python_host_callback
 from cython_vst_loader.vst_constants import AEffectOpcodes
+from cython_vst_loader.vst_event import VstEvent as PythonVstEvent, VstMidiEvent as PythonVstMidiEvent
 
 # https://github.com/simlmx/pyvst/blob/ded9ff373f37d1cbe8948ccb053ff4849f45f4cb/pyvst/vstplugin.py#L23
 # define kEffectMagic CCONST ('V', 's', 't', 'P')
@@ -39,8 +41,6 @@ def set_parameter(long plugin_pointer, int index, float value):
 def get_parameter(long plugin_pointer, int index)->float:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
     return cast_plugin_pointer.getParameter(cast_plugin_pointer, index)
-
-def process_events
 
 cdef extern from "aeffectx.h":
 
@@ -118,11 +118,49 @@ cdef extern from "aeffectx.h":
 
 _python_host_callback = None
 
+def process_events(long plugin_pointer, python_events: List[PythonVstEvent]):
+    python_midi_events = [python_event for python_event in python_events if python_event.is_midi()]
+
+    cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_pointer
+    cdef VstMidiEvent *c_midi_events = <VstMidiEvent*>malloc(len(python_midi_events) * sizeof(VstMidiEvent))
+
+    cdef VstMidiEvent *c_event_pointer = NULL
+    for position,python_event in enumerate(python_midi_events):
+        c_event_pointer = &c_midi_events[position]
+        convert_python_midi_event_into_c(python_event, c_event_pointer)
+
+    cdef VstEvents events
+    events.numEvents = len(python_midi_events)
+    events.events[0] = <VstEvent*>c_event_pointer
+
+    _process_events(cast_plugin_pointer, &events)
+
+    free(c_event_pointer)
+
+
+cdef _process_events(AEffect *plugin, VstEvents *events):
+    plugin.dispatcher(plugin, AEffectOpcodes.effProcessEvents, 0, 0, events, 0.0)
+
+
+cdef convert_python_midi_event_into_c(python_event: PythonVstMidiEvent, VstMidiEvent *c_event_pointer):
+    c_event_pointer.type = python_event.type
+    c_event_pointer.byteSize = sizeof(VstMidiEvent)
+    c_event_pointer.deltaFrames = python_event.delta_frames
+    c_event_pointer.flags = python_event.flags
+    for n in [0,1,2,3]:
+        c_event_pointer.midiData[n] = python_event.midi_data[n]
+    c_event_pointer.detune = python_event.detune[0]
+    c_event_pointer.noteOffVelocity = python_event.note_off_velocity[0]
+    c_event_pointer.reserved1 = python_event.reserved1[0]
+    c_event_pointer.reserved2 = python_event.reserved2[0]
+
+
 cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void*ptr, float opt):
     cdef long plugin_instance_identity = <long>effect
     return _python_host_callback(plugin_instance_identity, opcode, index, value)
 
-ctypedef AEffect *(*vstPluginFuncPtr)(audioMasterCallback host);
+ctypedef AEffect *(*vstPluginFuncPtr)(audioMasterCallback host)
+
 
 cdef AEffect *_load_vst(char *path_to_so):
     cdef char *entry_function_name = "VSTPluginMain"
