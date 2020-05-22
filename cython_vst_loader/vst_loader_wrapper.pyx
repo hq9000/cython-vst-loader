@@ -1,6 +1,6 @@
 from typing import Callable, List
 from libc.stdlib cimport malloc, free
-from posix.dlfcn cimport dlopen, dlsym, RTLD_LAZY
+from posix.dlfcn cimport dlopen, dlsym, RTLD_LAZY, dlerror
 from libc.stdint cimport int64_t, int32_t
 from cython_vst_loader.vst_host import host_callback as python_host_callback
 from cython_vst_loader.vst_constants import AEffectOpcodes
@@ -176,10 +176,16 @@ ctypedef AEffect *(*vstPluginFuncPtr)(audioMasterCallback host)
 cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*>0:
     cdef char *entry_function_name = "VSTPluginMain"
     cdef void *handle = dlopen(path_to_so, RTLD_LAZY)
+    cdef char* error
+    if handle is NULL:
+        error = dlerror()
+        raise Exception(b"null pointer handle as a result of dlopen: " + error)
+
     cdef vstPluginFuncPtr entry_function = <vstPluginFuncPtr> dlsym(handle, "VSTPluginMain")
 
     if entry_function is NULL:
-        raise Exception('null pointer when looking up entry function')
+        error = dlerror()
+        raise Exception(b"null pointer when looking up entry function: " + error)
 
     cdef AEffect *plugin_ptr = entry_function(_c_host_callback)
     return plugin_ptr
@@ -205,9 +211,6 @@ cdef bint _plugin_can_do(AEffect *plugin, char *can_do_string):
 
 cdef void _process_midi(AEffect* plugin, VstEvents* events):
     plugin.dispatcher(plugin, AEffectOpcodes.effProcessEvents, 0, 0, events, 0.0)
-
-
-
 
 
 
