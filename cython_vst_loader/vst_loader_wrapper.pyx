@@ -2,7 +2,7 @@ from typing import Callable, List
 from libc.stdlib cimport malloc, free
 from posix.dlfcn cimport dlopen, dlsym, RTLD_LAZY, dlerror
 from libc.stdint cimport int64_t, int32_t
-from cython_vst_loader.vst_constants import AEffectOpcodes
+from cython_vst_loader.vst_constants import AEffectOpcodes, VstStringConstants
 from cython_vst_loader.vst_event import VstEvent as PythonVstEvent, VstMidiEvent as PythonVstMidiEvent
 import os.path
 
@@ -130,6 +130,16 @@ cdef extern from "aeffectx.h":
 
 _python_host_callback = None
 
+def get_num_parameters(long plugin_pointer) -> int:
+    cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
+    return cast_plugin_pointer.numParams
+
+def get_parameter_name(long plugin_pointer, int param_index):
+
+    cdef void *buffer = malloc((VstStringConstants.kVstMaxParamStrLen + 1) + sizeof(char))
+    dispatch_to_plugin(plugin_pointer, AEffectOpcodes.effGetParamName, param_index, 0, <long>buffer, 0.0 )
+    cdef char *res = <char*>buffer
+    return res
 
 def dispatch_to_plugin(long plugin_pointer, VstInt32 opcode, VstInt32 index, VstInt32 value, long ptr, float opt) -> int:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
