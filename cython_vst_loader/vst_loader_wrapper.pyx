@@ -2,7 +2,6 @@ from typing import Callable, List
 from libc.stdlib cimport malloc, free
 from posix.dlfcn cimport dlopen, dlsym, RTLD_LAZY, dlerror
 from libc.stdint cimport int64_t, int32_t
-from cython_vst_loader.vst_host import host_callback as python_host_callback
 from cython_vst_loader.vst_constants import AEffectOpcodes
 from cython_vst_loader.vst_event import VstEvent as PythonVstEvent, VstMidiEvent as PythonVstMidiEvent
 import os.path
@@ -10,7 +9,8 @@ import os.path
 # https://github.com/simlmx/pyvst/blob/ded9ff373f37d1cbe8948ccb053ff4849f45f4cb/pyvst/vstplugin.py#L23
 # define kEffectMagic CCONST ('V', 's', 't', 'P')
 # or: MAGIC = int.from_bytes(b'VstP', 'big')
-DEF MAGIC = 1450406992
+# 1450406992
+DEF MAGIC = int.from_bytes(b'VstP', 'big')
 
 def register_host_callback(python_host_callback: Callable)->void:
     """
@@ -32,10 +32,11 @@ def create_plugin(path_to_so: bytes)->int:
 
     global _python_host_callback
     if _python_host_callback is None:
-       raise Exception('python callback is None')
+       raise Exception('python host callback has not been registered')
 
     c_plugin_pointer = _load_vst(path_to_so)
-    assert MAGIC == c_plugin_pointer.magic
+    if MAGIC != c_plugin_pointer.magic:
+        raise Exception('MAGIC is wrong')
 
     return <long>c_plugin_pointer
 
@@ -129,6 +130,14 @@ cdef extern from "aeffectx.h":
 
 _python_host_callback = None
 
+
+def dispatch_to_plugin(long plugin_pointer, VstInt32 opcode, VstInt32 index, VstInt32 value, long ptr, float opt) -> int:
+    cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
+    cdef void *cast_parameter_pointer = <void*>ptr
+    # AEffect* effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void* ptr, float opt
+    return cast_plugin_pointer.dispatcher(cast_plugin_pointer, opcode, index, value, cast_parameter_pointer, opt)
+
+
 def process_events(long plugin_pointer, python_events: List[PythonVstEvent]):
     python_midi_events = [python_event for python_event in python_events if python_event.is_midi()]
 
@@ -174,6 +183,9 @@ ctypedef AEffect *(*vstPluginFuncPtr)(audioMasterCallback host)
 
 
 cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*>0:
+    """
+    main loader function
+    """
     cdef char *entry_function_name = "VSTPluginMain"
     cdef void *handle = dlopen(path_to_so, RTLD_LAZY)
     cdef char* error
@@ -181,13 +193,15 @@ cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*>0:
         error = dlerror()
         raise Exception(b"null pointer handle as a result of dlopen: " + error)
 
-    cdef vstPluginFuncPtr entry_function = <vstPluginFuncPtr> dlsym(handle, "VSTPluginMain")
+    # some plugins seem to use "main" instead of "VSTPluginMain"
+    cdef vstPluginFuncPtr entry_function = <vstPluginFuncPtr> dlsym(handle, b"main")
 
     if entry_function is NULL:
         error = dlerror()
         raise Exception(b"null pointer when looking up entry function: " + error)
 
     cdef AEffect *plugin_ptr = entry_function(_c_host_callback)
+    _start_plugin(plugin_ptr)
     return plugin_ptr
 
 cdef _start_plugin(AEffect *plugin):
