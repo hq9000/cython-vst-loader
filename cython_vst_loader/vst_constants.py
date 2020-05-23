@@ -167,21 +167,21 @@ class AEffectOpcodes:
     effEditClose = 15
 
     # \deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effEditDraw)
+    effEditDraw = 16
     # deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effEditMouse)
+    effEditMouse = 17
     # deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effEditKey)
+    effEditKey = 18
 
     # no arguments @see AEffEditor::idle
     effEditIdle = 19
 
     # deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effEditTop)
+    effEditTop = 20
     # deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effEditSleep)
+    effEditSleep = 21
     # deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effIdentify)
+    effIdentify = 22
 
     # [ptr]: void** for chunk data address [index]: 0 for bank, 1 for program  @see AudioEffect::getChunk
     effGetChunk = 23
@@ -198,18 +198,18 @@ class AEffectOpcodes:
     effString2Parameter = 27
 
     # \deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effGetNumProgramCategories)
+    effGetNumProgramCategories = 28
 
     # [index]: program index [ptr]: buffer for program name, limited to #kVstMaxProgNameLen
     # [return value]: true for success  @see AudioEffectX::getProgramNameIndexed
     effGetProgramNameIndexed = 29
 
     # \deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effCopyProgram)
+    effCopyProgram = 30
     # \deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effConnectInput)
+    effConnectInput = 31
     # \deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effConnectOutput)
+    effConnectOutput = 32
 
     # [index]: input index [ptr]: #VstPinProperties*
     # [return value]: 1 if supported  @see AudioEffectX::getInputProperties
@@ -221,9 +221,9 @@ class AEffectOpcodes:
     effGetPlugCategory = 35
 
     # \deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effGetCurrentPosition)
+    effGetCurrentPosition = 36
     # \deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effGetDestinationBuffer)
+    effGetDestinationBuffer = 37
 
     # [ptr]: #VstAudioFile array [value]: count [index]: start flag  @see AudioEffectX::offlineNotify
     effOfflineNotify = 38
@@ -239,7 +239,7 @@ class AEffectOpcodes:
     effSetSpeakerArrangement = 42
 
     # \deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effSetBlockSizeAndSampleRate)
+    effSetBlockSizeAndSampleRate = 43
 
     # [value]: 1 = bypass, 0 = no bypass  @see AudioEffectX::setBypass
     effSetBypass = 44
@@ -247,7 +247,7 @@ class AEffectOpcodes:
     effGetEffectName = 45
 
     # \deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effGetErrorText)
+    effGetErrorText = 46
 
     # [ptr]: buffer for effect vendor string, limited to #kVstMaxVendorStrLen  @see AudioEffectX::getVendorString
     effGetVendorString = 47
@@ -263,18 +263,18 @@ class AEffectOpcodes:
     effGetTailSize = 52
 
     # \deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effIdle)
+    effIdle = 53
     # \deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effGetIcon)
+    effGetIcon = 54
     # \deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effSetViewPosition)
+    effSetViewPosition = 55
 
     # [index]: parameter index [ptr]: #VstParameterProperties*
     # [return value]: 1 if supported  @see AudioEffectX::getParameterProperties
     effGetParameterProperties = 56
 
     # \deprecated deprecated in VST 2.4
-    # DECLARE_VST_DEPRECATED (effKeysRequired)
+    effKeysRequired = 57
 
     # [return value]: VST version  @see AudioEffectX::getVstVersion
     effGetVstVersion = 58
