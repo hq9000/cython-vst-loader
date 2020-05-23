@@ -130,6 +130,19 @@ cdef extern from "aeffectx.h":
 
 _python_host_callback = None
 
+#=================================================================================
+# Public
+#=================================================================================
+def start_plugin(long plugin_instance_pointer, int sample_rate, int block_size):
+    cdef float sample_rate_as_float = <float>sample_rate
+    cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_instance_pointer
+
+    cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
+    cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effSetSampleRate, 0, 0, NULL, sample_rate)
+    cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effSetBlockSize, 0, block_size, NULL, 0.0)
+
+    _resume_plugin(cast_plugin_pointer)
+
 def get_num_parameters(long plugin_pointer) -> int:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
     return cast_plugin_pointer.numParams
@@ -157,7 +170,7 @@ def process_events(long plugin_pointer, python_events: List[PythonVstEvent]):
     cdef VstMidiEvent *c_event_pointer = NULL
     for position,python_event in enumerate(python_midi_events):
         c_event_pointer = &c_midi_events[position]
-        convert_python_midi_event_into_c(python_event, c_event_pointer)
+        _convert_python_midi_event_into_c(python_event, c_event_pointer)
 
     cdef VstEvents events
     events.numEvents = len(python_midi_events)
@@ -167,12 +180,14 @@ def process_events(long plugin_pointer, python_events: List[PythonVstEvent]):
 
     free(c_event_pointer)
 
-
+#=================================================================================
+# Private
+#=================================================================================
 cdef _process_events(AEffect *plugin, VstEvents *events):
     plugin.dispatcher(plugin, AEffectOpcodes.effProcessEvents, 0, 0, events, 0.0)
 
 
-cdef convert_python_midi_event_into_c(python_event: PythonVstMidiEvent, VstMidiEvent *c_event_pointer):
+cdef _convert_python_midi_event_into_c(python_event: PythonVstMidiEvent, VstMidiEvent *c_event_pointer):
     c_event_pointer.type = python_event.type
     c_event_pointer.byteSize = sizeof(VstMidiEvent)
     c_event_pointer.deltaFrames = python_event.delta_frames
@@ -196,7 +211,6 @@ cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index,
 
 ctypedef AEffect *(*vstPluginFuncPtr)(audioMasterCallback host)
 
-
 cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*>0:
     """
     main loader function
@@ -216,15 +230,7 @@ cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*>0:
         raise Exception(b"null pointer when looking up entry function: " + error)
 
     cdef AEffect *plugin_ptr = entry_function(_c_host_callback)
-    _start_plugin(plugin_ptr)
     return plugin_ptr
-
-cdef _start_plugin(AEffect *plugin):
-    plugin.dispatcher(plugin, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
-    plugin.dispatcher(plugin, AEffectOpcodes.effSetSampleRate, 0, 0, NULL, 44100.0)
-    plugin.dispatcher(plugin, AEffectOpcodes.effSetBlockSize, 0, 512, NULL, 0.0)
-
-    _resume_plugin(plugin)
 
 cdef _suspend_plugin(AEffect *plugin):
     plugin.dispatcher(plugin, AEffectOpcodes.effMainsChanged, 0, 0, NULL, 0.0)

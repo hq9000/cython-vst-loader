@@ -3,7 +3,7 @@ import inspect
 
 # noinspection PyUnresolvedReferences
 from cython_vst_loader.vst_loader_wrapper import hello_world, create_plugin, register_host_callback, dispatch_to_plugin, \
-    get_num_parameters, get_parameter_name
+    get_num_parameters, get_parameter_name, start_plugin
 
 from cython_vst_loader.vst_constants import AEffectOpcodes, AudioMasterOpcodes
 
@@ -50,6 +50,7 @@ def host_callback(plugin_instance_pointer: int, opcode: int, index: int, value: 
 register_host_callback(host_callback)
 path_to_plugin = b"/storage/projects/py_headless_daw/lib/linux_x64/DragonflyRoomReverb-vst.so"
 plugin_pointer = create_plugin(path_to_plugin)
+start_plugin(plugin_pointer, 44100, 512)
 num_params = get_num_parameters(plugin_pointer)
 
 for i in range(0,num_params-1):
