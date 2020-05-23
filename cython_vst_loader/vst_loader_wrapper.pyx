@@ -187,7 +187,12 @@ cdef convert_python_midi_event_into_c(python_event: PythonVstMidiEvent, VstMidiE
 
 cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void*ptr, float opt):
     cdef long plugin_instance_identity = <long>effect
-    return _python_host_callback(plugin_instance_identity, opcode, index, value)
+    cdef VstIntPtr result
+    result_from_python = _python_host_callback(plugin_instance_identity, opcode, index, value)
+    result = result_from_python
+    # print("returning result " + str(result))
+    # print("result from python " + str(result_from_python))
+    return result
 
 ctypedef AEffect *(*vstPluginFuncPtr)(audioMasterCallback host)
 
