@@ -1,11 +1,12 @@
 # my(?) pycharm doesn't seem to understand references to things inside cython module
 import inspect
 
+import numpy as np
 # noinspection PyUnresolvedReferences
 from cython_vst_loader.vst_loader_wrapper import hello_world, create_plugin, register_host_callback, dispatch_to_plugin, \
     get_num_parameters, get_parameter_name, start_plugin, get_parameter, set_parameter
 
-from cython_vst_loader.vst_constants import AEffectOpcodes, AudioMasterOpcodes
+from cython_vst_loader.vst_constants import AudioMasterOpcodes
 
 
 def get_name_of_opcode(opcode: int) -> str:
@@ -53,13 +54,22 @@ plugin_pointer = create_plugin(path_to_plugin)
 start_plugin(plugin_pointer, 44100, 512)
 num_params = get_num_parameters(plugin_pointer)
 
-for i in range(0,num_params-1):
+for i in range(0, num_params - 1):
     param_name = get_parameter_name(plugin_pointer, i)
     param_value = get_parameter(plugin_pointer, i)
     set_parameter(plugin_pointer, i, 0.5)
     new_param_value = get_parameter(plugin_pointer, i)
-    print (str(i) + " - " + str(param_name) + " -> " + str(param_value) + " -> " + str(new_param_value))
+    print(str(i) + " - " + str(param_name) + " -> " + str(param_value) + " -> " + str(new_param_value))
 
+# let's process some audio
 
+inputs = np.zeros((2, 512), np.float32)
+outputs = np.zeros((2, 512), np.float32)
+inputs_pointer, ro_flag = inputs.__array_interface__['data']
+outputs_pointer, ro_flag = outputs.__array_interface__['data']
+print("=======================================")
+print("test data processing")
+print("=======================================")
+print ("inputs pointer: " + str(inputs_pointer))
+print ("outputs pointer: " + str(outputs_pointer))
 
-hello_world()
