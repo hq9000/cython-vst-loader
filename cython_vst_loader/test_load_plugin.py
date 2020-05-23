@@ -3,7 +3,7 @@ import inspect
 
 # noinspection PyUnresolvedReferences
 from cython_vst_loader.vst_loader_wrapper import hello_world, create_plugin, register_host_callback, dispatch_to_plugin, \
-    get_num_parameters, get_parameter_name, start_plugin
+    get_num_parameters, get_parameter_name, start_plugin, get_parameter, set_parameter
 
 from cython_vst_loader.vst_constants import AEffectOpcodes, AudioMasterOpcodes
 
@@ -55,6 +55,11 @@ num_params = get_num_parameters(plugin_pointer)
 
 for i in range(0,num_params-1):
     param_name = get_parameter_name(plugin_pointer, i)
-    print (str(i) + " - " + str(param_name))
+    param_value = get_parameter(plugin_pointer, i)
+    set_parameter(plugin_pointer, i, 0.5)
+    new_param_value = get_parameter(plugin_pointer, i)
+    print (str(i) + " - " + str(param_name) + " -> " + str(param_value) + " -> " + str(new_param_value))
+
+
 
 hello_world()
