@@ -12,48 +12,6 @@ import os.path
 # 1450406992
 DEF MAGIC = int.from_bytes(b'VstP', 'big')
 
-def register_host_callback(python_host_callback: Callable)->void:
-    """
-    registers a python function to serve requests from plugins
-    :param python_host_callback:
-    :return:
-    """
-    global _python_host_callback
-    _python_host_callback = python_host_callback
-
-def hello_world():
-    print("hello world from cython")
-    return 123
-
-def create_plugin(path_to_so: bytes)->int:
-
-    if not os.path.exists(path_to_so):
-        raise Exception('plugin file does not exist')
-
-    global _python_host_callback
-    if _python_host_callback is None:
-       raise Exception('python host callback has not been registered')
-
-    c_plugin_pointer = _load_vst(path_to_so)
-    if MAGIC != c_plugin_pointer.magic:
-        raise Exception('MAGIC is wrong')
-
-    return <long>c_plugin_pointer
-
-def process_replacing(long plugin_pointer, long inputs, long outputs, num_frames: int):
-    cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_pointer
-    cdef float **casted_inputs = <float**>inputs
-    cdef float **casted_outputs = <float**>outputs
-    cast_plugin_pointer.processReplacing(cast_plugin_pointer, casted_inputs, casted_outputs, num_frames)
-
-def set_parameter(long plugin_pointer, int index, float value):
-    cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
-    cast_plugin_pointer.setParameter(cast_plugin_pointer, index, value)
-
-def get_parameter(long plugin_pointer, int index)->float:
-    cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
-    return cast_plugin_pointer.getParameter(cast_plugin_pointer, index)
-
 cdef extern from "aeffectx.h":
 
     ctypedef int32_t VstInt32
@@ -133,6 +91,52 @@ _python_host_callback = None
 #=================================================================================
 # Public
 #=================================================================================
+def register_host_callback(python_host_callback: Callable)->void:
+    """
+    registers a python function to serve requests from plugins
+
+    expected signature:
+    def host_callback(plugin_instance_pointer: int, opcode: int, index: int, value: float):
+
+    :param python_host_callback:
+    :return:
+    """
+    global _python_host_callback
+    _python_host_callback = python_host_callback
+
+def hello_world():
+    print("hello world from cython")
+    return 123
+
+def create_plugin(path_to_so: bytes)->int:
+
+    if not os.path.exists(path_to_so):
+        raise Exception('plugin file does not exist')
+
+    global _python_host_callback
+    if _python_host_callback is None:
+       raise Exception('python host callback has not been registered')
+
+    c_plugin_pointer = _load_vst(path_to_so)
+    if MAGIC != c_plugin_pointer.magic:
+        raise Exception('MAGIC is wrong')
+
+    return <long>c_plugin_pointer
+
+def process_replacing(long plugin_pointer, long inputs, long outputs, num_frames: int):
+    cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_pointer
+    cdef float **casted_inputs = <float**>inputs
+    cdef float **casted_outputs = <float**>outputs
+    cast_plugin_pointer.processReplacing(cast_plugin_pointer, casted_inputs, casted_outputs, num_frames)
+
+def set_parameter(long plugin_pointer, int index, float value):
+    cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
+    cast_plugin_pointer.setParameter(cast_plugin_pointer, index, value)
+
+def get_parameter(long plugin_pointer, int index)->float:
+    cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
+    return cast_plugin_pointer.getParameter(cast_plugin_pointer, index)
+
 def start_plugin(long plugin_instance_pointer, int sample_rate, int block_size):
     cdef float sample_rate_as_float = <float>sample_rate
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_instance_pointer
@@ -148,7 +152,6 @@ def get_num_parameters(long plugin_pointer) -> int:
     return cast_plugin_pointer.numParams
 
 def get_parameter_name(long plugin_pointer, int param_index):
-
     cdef void *buffer = malloc((VstStringConstants.kVstMaxParamStrLen + 1) + sizeof(char))
     dispatch_to_plugin(plugin_pointer, AEffectOpcodes.effGetParamName, param_index, 0, <long>buffer, 0.0 )
     cdef char *res = <char*>buffer
@@ -246,8 +249,3 @@ cdef bint _plugin_can_do(AEffect *plugin, char *can_do_string):
 
 cdef void _process_midi(AEffect* plugin, VstEvents* events):
     plugin.dispatcher(plugin, AEffectOpcodes.effProcessEvents, 0, 0, events, 0.0)
-
-
-
-
-
