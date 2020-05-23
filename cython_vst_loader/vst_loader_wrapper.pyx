@@ -123,11 +123,33 @@ def create_plugin(path_to_so: bytes)->int:
 
     return <long>c_plugin_pointer
 
-def process_replacing(long plugin_pointer, long inputs, long outputs, num_frames: int):
+DEF MAX_CHANNELS=10
+
+def process_replacing(long plugin_pointer, input_pointer_list: List[int], output_pointer_list: List[int], num_frames: int):
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_pointer
-    cdef float **casted_inputs = <float**>inputs
-    cdef float **casted_outputs = <float**>outputs
-    cast_plugin_pointer.processReplacing(cast_plugin_pointer, casted_inputs, casted_outputs, num_frames)
+
+    num_input_channels = len(input_pointer_list)
+    num_output_channels = len(output_pointer_list)
+
+    cdef float *input_pointers[MAX_CHANNELS]
+    cdef float *output_pointers[MAX_CHANNELS]
+
+    cdef long tmp
+
+    for index, pointer in enumerate(input_pointer_list):
+        tmp = <long>pointer
+        input_pointers[index] = <float*>tmp
+
+    for index, pointer in enumerate(output_pointer_list):
+        tmp = <long>pointer
+        output_pointers[index] = <float*>tmp
+
+    print("in cython: input0: " + str(<long>(input_pointers[0])))
+    print("in cython: input1: " + str(<long>(input_pointers[1])))
+
+    print("in cython: output0: " + str(<long>(output_pointers[0])))
+    print("in cython: output1: " + str(<long>(output_pointers[1])))
+    cast_plugin_pointer.processReplacing(cast_plugin_pointer, input_pointers, output_pointers, num_frames)
 
 def set_parameter(long plugin_pointer, int index, float value):
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer

@@ -1,10 +1,11 @@
 # my(?) pycharm doesn't seem to understand references to things inside cython module
 import inspect
+from typing import List
 
 import numpy as np
 # noinspection PyUnresolvedReferences
 from cython_vst_loader.vst_loader_wrapper import hello_world, create_plugin, register_host_callback, dispatch_to_plugin, \
-    get_num_parameters, get_parameter_name, start_plugin, get_parameter, set_parameter
+    get_num_parameters, get_parameter_name, start_plugin, get_parameter, set_parameter, process_replacing
 
 from cython_vst_loader.vst_constants import AudioMasterOpcodes
 
@@ -63,13 +64,28 @@ for i in range(0, num_params - 1):
 
 # let's process some audio
 
-inputs = np.zeros((2, 512), np.float32)
+inputs = np.ones((2, 512), np.float32)
 outputs = np.zeros((2, 512), np.float32)
+
+array_interface = inputs.__array_interface__
+
 inputs_pointer, ro_flag = inputs.__array_interface__['data']
 outputs_pointer, ro_flag = outputs.__array_interface__['data']
 print("=======================================")
 print("test data processing")
 print("=======================================")
-print ("inputs pointer: " + str(inputs_pointer))
-print ("outputs pointer: " + str(outputs_pointer))
+print("inputs pointer: " + str(inputs_pointer))
+print("outputs pointer: " + str(outputs_pointer))
 
+input_pointers: List[int] = []
+output_pointers: List[int] = []
+for idx, row in enumerate(inputs):
+    row_pointer, ro_flag = row.__array_interface__['data']
+    input_pointers.append(row_pointer)
+for idx, row in enumerate(outputs):
+    row_pointer, ro_flag = row.__array_interface__['data']
+    output_pointers.append(row_pointer)
+
+process_replacing(plugin_pointer, input_pointers, output_pointers, 512)
+
+print(123)
