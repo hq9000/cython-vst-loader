@@ -1,6 +1,10 @@
 # my(?) pycharm doesn't seem to understand references to things inside cython module
 import inspect
 from typing import List
+import matplotlib.pyplot as plt
+
+print ("hello world")
+
 
 import numpy as np
 # noinspection PyUnresolvedReferences
@@ -28,7 +32,7 @@ def get_name_of_opcode(opcode: int) -> str:
     raise Exception('opcode ' + str(opcode) + ' not known')
 
 
-def host_callback(plugin_instance_pointer: int, opcode: int, index: int, value: float):
+def host_callback(plugin_instance_pointer: int, opcode: int, index: int, value: float, ptr: int, opt: float):
     name_of_opcode: str = get_name_of_opcode(opcode)
 
     print('host callback called: ' + str(plugin_instance_pointer)
@@ -39,18 +43,23 @@ def host_callback(plugin_instance_pointer: int, opcode: int, index: int, value: 
 
     res = None
     if opcode == AudioMasterOpcodes.audioMasterVersion:
-        res = 2400
+        res = (2400, None)
     elif opcode == AudioMasterOpcodes.audioMasterGetBlockSize:
-        res = 512
+        res = (512, None)
     elif opcode == AudioMasterOpcodes.audioMasterGetSampleRate:
-        res = 44100
-
-    print('-> ' + str(res))
+        res = (44100, None)
+    elif opcode == AudioMasterOpcodes.audioMasterGetProductString:
+        res = (0, b"whatever")
+    print('-> ' + str(res[0]) + "_" + str(res[1]))
     return res
 
 
 register_host_callback(host_callback)
-path_to_plugin = b"/storage/projects/py_headless_daw/lib/linux_x64/DragonflyRoomReverb-vst.so"
+#path_to_plugin = b"/storage/projects/py_headless_daw/lib/linux_x64/DragonflyRoomReverb-vst.so"
+#path_to_plugin = b"/storage/projects/py_headless_daw/lib/linux_x64/SicknDstroy.so"
+# path_to_plugin = b"/storage/projects/py_headless_daw/lib/linux_x64/amsynth_vst.so"
+path_to_plugin = b"/storage/projects/3rd_party/amsynth/.libs/amsynth_vst.so"
+
 plugin_pointer = create_plugin(path_to_plugin)
 start_plugin(plugin_pointer, 44100, 512)
 num_params = get_num_parameters(plugin_pointer)
@@ -58,7 +67,7 @@ num_params = get_num_parameters(plugin_pointer)
 for i in range(0, num_params - 1):
     param_name = get_parameter_name(plugin_pointer, i)
     param_value = get_parameter(plugin_pointer, i)
-    set_parameter(plugin_pointer, i, 0.5)
+    # set_parameter(plugin_pointer, i, 0.5)
     new_param_value = get_parameter(plugin_pointer, i)
     print(str(i) + " - " + str(param_name) + " -> " + str(param_value) + " -> " + str(new_param_value))
 
@@ -87,5 +96,8 @@ for idx, row in enumerate(outputs):
     output_pointers.append(row_pointer)
 
 process_replacing(plugin_pointer, input_pointers, output_pointers, 512)
+
+plt.plot(outputs[1])
+plt.show()
 
 print(123)

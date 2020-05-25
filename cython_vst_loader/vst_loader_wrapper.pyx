@@ -5,12 +5,20 @@ from libc.stdint cimport int64_t, int32_t
 from cython_vst_loader.vst_constants import AEffectOpcodes, VstStringConstants
 from cython_vst_loader.vst_event import VstEvent as PythonVstEvent, VstMidiEvent as PythonVstMidiEvent
 import os.path
+from libc.string cimport memcpy
 
 # https://github.com/simlmx/pyvst/blob/ded9ff373f37d1cbe8948ccb053ff4849f45f4cb/pyvst/vstplugin.py#L23
 # define kEffectMagic CCONST ('V', 's', 't', 'P')
 # or: MAGIC = int.from_bytes(b'VstP', 'big')
 # 1450406992
 DEF MAGIC = int.from_bytes(b'VstP', 'big')
+
+# despite SDK stating that:
+# "
+#    kVstMaxParamStrLen   = 8,	///< used for #effGetParamLabel, #effGetParamDisplay, #effGetParamName
+# "
+# amsynth uses longer names, thus we will allocate a bigger buffer for those:
+DEF MAX_PARAMETER_NAME_LENGTH = 64
 
 cdef extern from "aeffectx.h":
 
@@ -174,7 +182,7 @@ def get_num_parameters(long plugin_pointer) -> int:
     return cast_plugin_pointer.numParams
 
 def get_parameter_name(long plugin_pointer, int param_index):
-    cdef void *buffer = malloc((VstStringConstants.kVstMaxParamStrLen + 1) + sizeof(char))
+    cdef void *buffer = malloc(MAX_PARAMETER_NAME_LENGTH * sizeof(char))
     dispatch_to_plugin(plugin_pointer, AEffectOpcodes.effGetParamName, param_index, 0, <long>buffer, 0.0 )
     cdef char *res = <char*>buffer
     return res
@@ -225,11 +233,19 @@ cdef _convert_python_midi_event_into_c(python_event: PythonVstMidiEvent, VstMidi
     c_event_pointer.reserved2 = python_event.reserved2[0]
 
 
-cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void*ptr, float opt):
+cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void *ptr, float opt):
     cdef long plugin_instance_identity = <long>effect
     cdef VstIntPtr result
-    result_from_python = _python_host_callback(plugin_instance_identity, opcode, index, value)
-    result = result_from_python
+    (return_code, data_to_write) = _python_host_callback(plugin_instance_identity, opcode, index, value, <long>ptr, opt)
+    result = return_code
+
+    if not isinstance(data_to_write, bytes):
+        raise Exception('data_to_write is not bytes')
+
+    if data_to_write is not None:
+        print("memcpy")
+        # memcpy(ptr,<void*>data_to_write, len(data_to_write))
+
     # print("returning result " + str(result))
     # print("result from python " + str(result_from_python))
     return result
@@ -248,7 +264,7 @@ cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*>0:
         raise Exception(b"null pointer handle as a result of dlopen: " + error)
 
     # some plugins seem to use "main" instead of "VSTPluginMain"
-    cdef vstPluginFuncPtr entry_function = <vstPluginFuncPtr> dlsym(handle, b"main")
+    cdef vstPluginFuncPtr entry_function = <vstPluginFuncPtr> dlsym(handle, b"VSTPluginMain")
 
     if entry_function is NULL:
         error = dlerror()
