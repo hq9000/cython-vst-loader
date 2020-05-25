@@ -19,10 +19,11 @@ class VstMidiEvent(VstEvent):
     def __init__(self):
         super().__init__()
         self.type: int = VstEventTypes.kVstMidiType
+        self.flags = 0
         self.note_length: Optional[int] = None
         self.note_offset: Optional[int] = None
         self.midi_data: bytearray = bytearray([0, 0, 0, 0])
-        self.detune: bytearray = bytearray([0])
-        self.note_off_velocity: bytearray = bytearray([0])
-        self.reserved1: bytearray = bytearray([0])
-        self.reserved2: bytearray = bytearray([0])
+        self.detune: int = 0
+        self.note_off_velocity: int = 0
+        self.reserved1: int = 0
+        self.reserved2: int = 0
