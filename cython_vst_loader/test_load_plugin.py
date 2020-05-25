@@ -1,16 +1,17 @@
 # my(?) pycharm doesn't seem to understand references to things inside cython module
 import inspect
 from typing import List
+
+from cython_vst_loader.vst_event import VstMidiEvent
 import matplotlib.pyplot as plt
 
-print ("hello world")
-
+print("hello world")
 
 import numpy as np
 # noinspection PyUnresolvedReferences
 from cython_vst_loader.vst_loader_wrapper import hello_world, create_plugin, register_host_callback, dispatch_to_plugin, \
     get_num_parameters, get_parameter_name, start_plugin, get_parameter, set_parameter, process_replacing, \
-    get_flags
+    get_flags, process_events
 
 from cython_vst_loader.vst_constants import AudioMasterOpcodes, VstAEffectFlags
 
@@ -55,9 +56,39 @@ def host_callback(plugin_instance_pointer: int, opcode: int, index: int, value: 
     return res
 
 
+def midi_note_as_bytes(note: int, velocity: int = 100, kind: str = 'note_on', channel: int = 1) -> bytes:
+    """
+    borrowed from here: # https://github.com/simlmx/pyvst/blob/ded9ff373f37d1cbe8948ccb053ff4849f45f4cb/pyvst/midi.py#L11
+
+    :param note:
+    :param velocity:
+    :param kind:
+    :param channel: Midi channel (those are 1-indexed)
+    """
+    if kind == 'note_on':
+        kind_byte = b'\x90'[0]
+    elif kind == 'note_off':
+        kind_byte = b'\x80'[0]
+    else:
+        raise NotImplementedError('MIDI type {} not supported yet'.format(kind))
+
+    def _check_channel_valid(channel):
+        if not (1 <= channel <= 16):
+            raise ValueError('Invalid channel "{}". Must be in the [1, 16] range.'
+                             .format(channel))
+
+    _check_channel_valid(channel)
+
+    return bytes([
+        (channel - 1) | kind_byte,
+        note,
+        velocity
+    ])
+
+
 register_host_callback(host_callback)
-#path_to_plugin = b"/storage/projects/py_headless_daw/lib/linux_x64/DragonflyRoomReverb-vst.so"
-#path_to_plugin = b"/storage/projects/py_headless_daw/lib/linux_x64/SicknDstroy.so"
+# path_to_plugin = b"/storage/projects/py_headless_daw/lib/linux_x64/DragonflyRoomReverb-vst.so"
+# path_to_plugin = b"/storage/projects/py_headless_daw/lib/linux_x64/SicknDstroy.so"
 # path_to_plugin = b"/storage/projects/py_headless_daw/lib/linux_x64/amsynth_vst.so"
 path_to_plugin = b"/storage/projects/3rd_party/amsynth/.libs/amsynth_vst.so"
 
@@ -101,7 +132,24 @@ process_replacing(plugin_pointer, input_pointers, output_pointers, 512)
 flags = get_flags(plugin_pointer)
 is_synth: bool = bool(flags & VstAEffectFlags.effFlagsIsSynth)
 
-# plt.plot(outputs[1])
-# plt.show()
+print(123)
+
+event = VstMidiEvent()
+event.delta_frames = 1
+
+midi_data = midi_note_as_bytes(85, 100, 'note_on', 1)
+event.midi_data = midi_data
+event.detune = 0
+event.note_length = 0
+event.note_offset = 0
+event.note_off_velocity = 127
+
+process_events(plugin_pointer, [event])
+
+
+process_replacing(plugin_pointer, input_pointers, output_pointers, 512)
+
+plt.plot(outputs[1])
+plt.show()
 
 print(123)

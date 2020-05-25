@@ -135,6 +135,7 @@ def create_plugin(path_to_so: bytes)->int:
 
     return <long>c_plugin_pointer
 
+# maximum number of channels a plugin can support
 DEF MAX_CHANNELS=10
 
 def process_replacing(long plugin_pointer, input_pointer_list: List[int], output_pointer_list: List[int], num_frames: int):
@@ -229,12 +230,15 @@ cdef _convert_python_midi_event_into_c(python_event: PythonVstMidiEvent, VstMidi
     c_event_pointer.byteSize = sizeof(VstMidiEvent)
     c_event_pointer.deltaFrames = python_event.delta_frames
     c_event_pointer.flags = python_event.flags
-    for n in [0,1,2,3]:
-        c_event_pointer.midiData[n] = python_event.midi_data[n]
-    c_event_pointer.detune = python_event.detune[0]
-    c_event_pointer.noteOffVelocity = python_event.note_off_velocity[0]
-    c_event_pointer.reserved1 = python_event.reserved1[0]
-    c_event_pointer.reserved2 = python_event.reserved2[0]
+
+    for n in [0,1,2]:
+        print ("midi_data[" + str(n) + "] = " + str(python_event.midi_data[n]))
+        c_event_pointer.midiData[n] = <unsigned char>python_event.midi_data[n]
+
+    c_event_pointer.detune = python_event.detune
+    c_event_pointer.noteOffVelocity = python_event.note_off_velocity
+    c_event_pointer.reserved1 = python_event.reserved1
+    c_event_pointer.reserved2 = python_event.reserved2
 
 
 cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void *ptr, float opt):
