@@ -320,3 +320,30 @@ class VstEventTypes:
     # DECLARE_VST_DEPRECATED (kVstParameterType) = 4,	///< \deprecated unused event type
     # DECLARE_VST_DEPRECATED (kVstTriggerType) = 5,	///< \deprecated unused event type
     kVstSysExType = 6  # < MIDI system exclusive  @see VstMidiSysexEvent
+
+
+class VstAEffectFlags:
+    # set if the plug-in provides a custom editor
+    effFlagsHasEditor = 1 << 0
+    # supports replacing process mode (which should the default mode in VST 2.4)
+    effFlagsCanReplacing = 1 << 4
+    # program data is handled in formatless chunks
+    effFlagsProgramChunks = 1 << 5
+    # plug-in is a synth (VSTi), Host may assign mixer channels for its outputs
+    effFlagsIsSynth = 1 << 8
+    # plug-in does not produce sound when input is all silence
+    effFlagsNoSoundInStop = 1 << 9
+
+    # plug-in supports double precision processing
+    effFlagsCanDoubleReplacing = 1 << 12
+
+    # \deprecated deprecated in VST 2.4
+    # DECLARE_VST_DEPRECATED (effFlagsHasClip) = 1 << 1,
+    # \deprecated deprecated in VST 2.4
+    # DECLARE_VST_DEPRECATED (effFlagsHasVu)   = 1 << 2,
+    # \deprecated deprecated in VST 2.4
+    # DECLARE_VST_DEPRECATED (effFlagsCanMono) = 1 << 3,
+    # \deprecated deprecated in VST 2.4
+    # DECLARE_VST_DEPRECATED (effFlagsExtIsAsync)   = 1 << 10,
+    # \deprecated deprecated in VST 2.4
+    # DECLARE_VST_DEPRECATED (effFlagsExtHasBuffer) = 1 << 11

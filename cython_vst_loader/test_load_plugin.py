@@ -9,9 +9,10 @@ print ("hello world")
 import numpy as np
 # noinspection PyUnresolvedReferences
 from cython_vst_loader.vst_loader_wrapper import hello_world, create_plugin, register_host_callback, dispatch_to_plugin, \
-    get_num_parameters, get_parameter_name, start_plugin, get_parameter, set_parameter, process_replacing
+    get_num_parameters, get_parameter_name, start_plugin, get_parameter, set_parameter, process_replacing, \
+    get_flags
 
-from cython_vst_loader.vst_constants import AudioMasterOpcodes
+from cython_vst_loader.vst_constants import AudioMasterOpcodes, VstAEffectFlags
 
 
 def get_name_of_opcode(opcode: int) -> str:
@@ -97,7 +98,10 @@ for idx, row in enumerate(outputs):
 
 process_replacing(plugin_pointer, input_pointers, output_pointers, 512)
 
-plt.plot(outputs[1])
-plt.show()
+flags = get_flags(plugin_pointer)
+is_synth: bool = bool(flags & VstAEffectFlags.effFlagsIsSynth)
+
+# plt.plot(outputs[1])
+# plt.show()
 
 print(123)

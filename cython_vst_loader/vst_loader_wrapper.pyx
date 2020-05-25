@@ -112,6 +112,10 @@ def register_host_callback(python_host_callback: Callable)->void:
     global _python_host_callback
     _python_host_callback = python_host_callback
 
+def get_flags(long instance_pointer)->int:
+    cdef AEffect* cast_plugin_pointer = <AEffect*>instance_pointer
+    return cast_plugin_pointer.flags
+
 def hello_world():
     print("hello world from cython")
     return 123
