@@ -247,12 +247,10 @@ cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index,
     (return_code, data_to_write) = _python_host_callback(plugin_instance_identity, opcode, index, value, <long>ptr, opt)
     result = return_code
 
-    if not isinstance(data_to_write, bytes):
-        raise Exception('data_to_write is not bytes')
-
     if data_to_write is not None:
-        print("memcpy")
-        # memcpy(ptr,<void*>data_to_write, len(data_to_write))
+        if not isinstance(data_to_write, bytes):
+            raise Exception('data_to_write is not bytes')
+        memcpy(ptr,<void*>data_to_write, len(data_to_write))
 
     # print("returning result " + str(result))
     # print("result from python " + str(result_from_python))
@@ -272,7 +270,7 @@ cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*>0:
         raise Exception(b"null pointer handle as a result of dlopen: " + error)
 
     # some plugins seem to use "main" instead of "VSTPluginMain"
-    cdef vstPluginFuncPtr entry_function = <vstPluginFuncPtr> dlsym(handle, b"VSTPluginMain")
+    cdef vstPluginFuncPtr entry_function = <vstPluginFuncPtr> dlsym(handle, b"main")
 
     if entry_function is NULL:
         error = dlerror()
