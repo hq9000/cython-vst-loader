@@ -134,6 +134,15 @@ def create_plugin(path_to_so: bytes)->int:
 
     return <long>c_plugin_pointer
 
+def allocate_float_buffer(int size) -> int:
+    return <long>malloc(size * sizeof(float))
+
+def allocate_double_buffer(int size) -> int:
+    return <long>malloc(size * sizeof(double))
+
+def free_buffer(long pointer):
+    free(<void*>pointer)
+
 # maximum number of channels a plugin can support
 DEF MAX_CHANNELS=10
 
