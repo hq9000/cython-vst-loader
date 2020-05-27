@@ -2,7 +2,7 @@ from typing import Callable, List
 from libc.stdlib cimport malloc, free
 from posix.dlfcn cimport dlopen, dlsym, RTLD_LAZY, dlerror
 from libc.stdint cimport int64_t, int32_t
-from cython_vst_loader.vst_constants import AEffectOpcodes, VstStringConstants
+from cython_vst_loader.vst_constants import AEffectOpcodes
 from cython_vst_loader.vst_event import VstEvent as PythonVstEvent, VstMidiEvent as PythonVstMidiEvent
 import os.path
 from libc.string cimport memcpy
@@ -99,6 +99,9 @@ _python_host_callback = None
 #=================================================================================
 # Public
 #=================================================================================
+def host_callback_is_registered() -> bool:
+    return _python_host_callback is not None
+
 def register_host_callback(python_host_callback: Callable)->void:
     """
     registers a python function to serve requests from plugins
@@ -115,10 +118,6 @@ def register_host_callback(python_host_callback: Callable)->void:
 def get_flags(long instance_pointer)->int:
     cdef AEffect* cast_plugin_pointer = <AEffect*>instance_pointer
     return cast_plugin_pointer.flags
-
-def hello_world():
-    print("hello world from cython")
-    return 123
 
 def create_plugin(path_to_so: bytes)->int:
 
@@ -138,6 +137,7 @@ def create_plugin(path_to_so: bytes)->int:
 # maximum number of channels a plugin can support
 DEF MAX_CHANNELS=10
 
+# noinspection DuplicatedCode
 def process_replacing(long plugin_pointer, input_pointer_list: List[int], output_pointer_list: List[int], num_frames: int):
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_pointer
 
@@ -157,12 +157,30 @@ def process_replacing(long plugin_pointer, input_pointer_list: List[int], output
         tmp = <long>pointer
         output_pointers[index] = <float*>tmp
 
-    print("in cython: input0: " + str(<long>(input_pointers[0])))
-    print("in cython: input1: " + str(<long>(input_pointers[1])))
-
-    print("in cython: output0: " + str(<long>(output_pointers[0])))
-    print("in cython: output1: " + str(<long>(output_pointers[1])))
     cast_plugin_pointer.processReplacing(cast_plugin_pointer, input_pointers, output_pointers, num_frames)
+
+# noinspection DuplicatedCode
+def process_double_replacing(long plugin_pointer, input_pointer_list: List[int], output_pointer_list: List[int], num_frames: int):
+    cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_pointer
+
+    num_input_channels = len(input_pointer_list)
+    num_output_channels = len(output_pointer_list)
+
+    cdef double *input_pointers[MAX_CHANNELS]
+    cdef double *output_pointers[MAX_CHANNELS]
+
+    cdef long tmp
+
+    for index, pointer in enumerate(input_pointer_list):
+        tmp = <long>pointer
+        input_pointers[index] = <double*>tmp
+
+    for index, pointer in enumerate(output_pointer_list):
+        tmp = <long>pointer
+        output_pointers[index] = <double*>tmp
+
+    cast_plugin_pointer.processDoubleReplacing(cast_plugin_pointer, input_pointers, output_pointers, num_frames)
+
 
 def set_parameter(long plugin_pointer, int index, float value):
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
@@ -185,6 +203,18 @@ def start_plugin(long plugin_instance_pointer, int sample_rate, int block_size):
 def get_num_parameters(long plugin_pointer) -> int:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
     return cast_plugin_pointer.numParams
+
+def get_num_inputs(long plugin_pointer) -> int:
+    cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
+    return cast_plugin_pointer.numInputs
+
+def get_num_outputs(long plugin_pointer) -> int:
+    cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
+    return cast_plugin_pointer.numOutputs
+
+def get_num_programs(long plugin_pointer) -> int:
+    cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
+    return cast_plugin_pointer.numPrograms
 
 def get_parameter_name(long plugin_pointer, int param_index):
     cdef void *buffer = malloc(MAX_PARAMETER_NAME_LENGTH * sizeof(char))
