@@ -3,9 +3,10 @@ from typing import Optional, Dict, List
 # noinspection PyUnresolvedReferences
 from cython_vst_loader.vst_loader_wrapper import create_plugin, register_host_callback, host_callback_is_registered, \
     get_num_parameters, get_parameter, set_parameter, get_num_inputs, get_num_outputs, get_num_programs, \
-    process_replacing
+    process_replacing, get_flags, process_double_replacing, get_parameter_name
 
 from cython_vst_loader.exceptions import CythonVstLoaderException
+from cython_vst_loader.vst_constants import VstAEffectFlags
 from cython_vst_loader.vst_host import VstHost
 
 
@@ -21,13 +22,13 @@ class VstPlugin:
     _plugin_host_map: Dict[int, VstHost] = {}
 
     def __init__(self, path_to_shared_library: bytes, host: VstHost):
-        if not host_callback_is_registered:
+        if not host_callback_is_registered():
             register_host_callback(self._global_host_callback)
 
-        self._temporary_context_host = host
+        VstPlugin._temporary_context_host = host
         self._instance_pointer: int = create_plugin(path_to_shared_library)
-        self._plugin_host_map[pointer] = host
-        self._temporary_context_host = None
+        self._plugin_host_map[self._instance_pointer] = host
+        VstPlugin._temporary_context_host = None
 
     @classmethod
     def _global_host_callback(cls, plugin_instance_pointer: int, opcode: int, index: int, value: float, ptr: int,
@@ -40,7 +41,7 @@ class VstPlugin:
             if host is None:
                 raise CythonVstLoaderException('host is not registered for this plugin')
 
-        host.host_callback(plugin_instance_pointer, opcode, index, value, ptr, opt)
+        return host.host_callback(plugin_instance_pointer, opcode, index, value, ptr, opt)
 
     def get_num_parameters(self) -> int:
         return get_num_parameters(self._instance_pointer)
@@ -65,11 +66,16 @@ class VstPlugin:
     def process_replacing(self, input_channel_pointers: List[int], output_channel_pointers: List[int], block_size: int):
         process_replacing(self._instance_pointer, input_channel_pointers, output_channel_pointers, block_size)
 
-    def process_double_replacing(self, input_channel_pointers: List[int], output_channel_pointers: List[int], block_size: int):
+    def process_double_replacing(self, input_channel_pointers: List[int], output_channel_pointers: List[int],
+                                 block_size: int):
         process_double_replacing(self._instance_pointer, input_channel_pointers, output_channel_pointers, block_size)
 
     def _validate_parameter_index(self, index: int):
         if index < 0 or index > self.get_num_parameters() - 1:
             raise CythonVstLoaderException('requested parameter index is out of range: ' + str(index))
 
+    def is_synth(self) -> bool:
+        return get_flags(self._instance_pointer) & VstAEffectFlags.effFlagsIsSynth
 
+    def get_parameter_name(self, param_index: int) -> str:
+        return get_parameter_name(self._instance_pointer, param_index)
