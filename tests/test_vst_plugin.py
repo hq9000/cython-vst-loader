@@ -1,7 +1,7 @@
 import os
 
 # noinspection PyUnresolvedReferences
-from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer
+from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer, get_float_buffer_as_list
 
 from cython_vst_loader.vst_host import VstHost
 from cython_vst_loader.vst_plugin import VstPlugin
@@ -13,6 +13,7 @@ def test_with_amsynth():
     this_dir: str = os.path.dirname(os.path.realpath(__file__))
     plugin_path: str = this_dir + "/test_plugins/amsynth-vst.x86_64-linux.so"
     plugin = VstPlugin(plugin_path.encode('utf-8'), host)
+
     assert (41 == plugin.get_num_parameters())
 
     assert (0 == plugin.get_num_input_channels())  # it's a synth, that's why
@@ -33,3 +34,13 @@ def test_with_amsynth():
     assert (left_input > 10000)
     assert (right_output > 10000)
     assert (left_output > 10000)
+
+    plugin.process_replacing([], [right_output, left_output], 512)
+
+    right_output_as_list = get_float_buffer_as_list(right_output, 512)
+    left_output_as_list = get_float_buffer_as_list(left_output, 512)
+
+    for i in range(0, 512):
+        assert (right_output_as_list[i] == 0.0)
+        assert (left_output_as_list[i] == 0.0)
+

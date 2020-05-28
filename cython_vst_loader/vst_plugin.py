@@ -3,7 +3,8 @@ from typing import Optional, Dict, List
 # noinspection PyUnresolvedReferences
 from cython_vst_loader.vst_loader_wrapper import create_plugin, register_host_callback, host_callback_is_registered, \
     get_num_parameters, get_parameter, set_parameter, get_num_inputs, get_num_outputs, get_num_programs, \
-    process_replacing, get_flags, process_double_replacing, get_parameter_name
+    process_replacing, get_flags, process_double_replacing, get_parameter_name, \
+    start_plugin
 
 from cython_vst_loader.exceptions import CythonVstLoaderException
 from cython_vst_loader.vst_constants import VstAEffectFlags
@@ -29,6 +30,8 @@ class VstPlugin:
         self._instance_pointer: int = create_plugin(path_to_shared_library)
         self._plugin_host_map[self._instance_pointer] = host
         VstPlugin._temporary_context_host = None
+
+        start_plugin(self._instance_pointer, host.get_sample_rate(), host.get_block_size())
 
     @classmethod
     def _global_host_callback(cls, plugin_instance_pointer: int, opcode: int, index: int, value: float, ptr: int,

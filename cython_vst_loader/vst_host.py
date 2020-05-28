@@ -2,12 +2,17 @@ from cython_vst_loader.vst_constants import AudioMasterOpcodes
 
 
 class VstHost:
-
     VST_VERSION: int = 2400
 
     def __init__(self, sample_rate: int, buffer_size: int):
         self._sample_rate: int = sample_rate
         self._block_size: int = buffer_size
+
+    def get_sample_rate(self) -> int:
+        return self._sample_rate
+
+    def get_block_size(self) -> int:
+        return self._block_size
 
     # noinspection PyUnusedLocal
     def host_callback(self, plugin_instance_pointer: int, opcode: int, index: int, value: float, ptr: int, opt: float):
