@@ -134,11 +134,33 @@ def create_plugin(path_to_so: bytes)->int:
 
     return <long>c_plugin_pointer
 
-def allocate_float_buffer(int size) -> int:
-    return <long>malloc(size * sizeof(float))
+def allocate_float_buffer(int size, float fill_with) -> int:
+    cdef float *ptr = <float*>malloc(size * sizeof(float))
+    for i in range(0,size):
+        ptr[i] = fill_with
+    return <long>ptr
 
-def allocate_double_buffer(int size) -> int:
-    return <long>malloc(size * sizeof(double))
+def allocate_double_buffer(int size, double fill_with) -> int:
+    cdef double *ptr = <double*>malloc(size * sizeof(double))
+    for i in range(0,size):
+        ptr[i] = fill_with
+    return <long>ptr
+
+def get_float_buffer_as_list(long buffer_pointer, int size) -> List[float]:
+    cdef float *ptr = <float*>buffer_pointer
+    res = []
+    for i in range(0,size):
+        res.append(float(ptr[i]))
+
+    return res
+
+def get_double_buffer_as_list(long buffer_pointer, int size) -> List[float]:
+    cdef double *ptr = <double*>buffer_pointer
+    res = []
+    for i in range(0,size):
+        res.append(float(ptr[i]))
+
+    return res
 
 def free_buffer(long pointer):
     free(<void*>pointer)
