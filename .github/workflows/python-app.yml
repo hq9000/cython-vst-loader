@@ -36,4 +36,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        export PYTHONPATH="/home/runner/work/cython-vst-loader/"; cd /home/runner/work/cython-vst-loader/; pytest
+        python -m pytest
