@@ -83,7 +83,10 @@ class VstPlugin:
             raise CythonVstLoaderException('requested parameter index is out of range: ' + str(index))
 
     def is_synth(self) -> bool:
-        return get_flags(self._instance_pointer) & VstAEffectFlags.effFlagsIsSynth
+        return bool(get_flags(self._instance_pointer) & VstAEffectFlags.effFlagsIsSynth)
 
     def get_parameter_name(self, param_index: int) -> str:
         return get_parameter_name(self._instance_pointer, param_index)
+
+    def allows_double_precision(self) -> bool:
+        return bool(get_flags(self._instance_pointer) & VstAEffectFlags.effFlagsCanDoubleReplacing)
