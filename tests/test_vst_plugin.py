@@ -3,6 +3,7 @@ import os
 # noinspection PyUnresolvedReferences
 from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer, get_float_buffer_as_list
 
+from cython_vst_loader.vst_event import VstNoteOnMidiEvent
 from cython_vst_loader.vst_host import VstHost
 from cython_vst_loader.vst_plugin import VstPlugin
 
@@ -44,3 +45,20 @@ def test_with_amsynth():
         assert (right_output_as_list[i] == 0.0)
         assert (left_output_as_list[i] == 0.0)
 
+    # now let's play a note
+    event = VstNoteOnMidiEvent(3, 85, 100, 1)
+    plugin.process_events([event])
+    plugin.process_replacing([], [right_output, left_output], 512)
+
+    right_output_as_list = get_float_buffer_as_list(right_output, 512)
+    left_output_as_list = get_float_buffer_as_list(left_output, 512)
+
+    # http://i.imgur.com/DNGyvYq.png
+    for i in range(0, 4):
+        assert (0.0 == right_output_as_list[i])
+        assert (0.0 == right_output_as_list[i])
+
+    for i in range(5, 8):
+        assert (0.0 != right_output_as_list[i])
+        assert (0.0 != right_output_as_list[i])
+        assert (right_output_as_list[i] == left_output_as_list[i])  # mono signal

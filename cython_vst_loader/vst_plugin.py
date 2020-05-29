@@ -1,13 +1,15 @@
 from typing import Optional, Dict, List
 
+# my Pycharm does not resolve defs from the pyx file
 # noinspection PyUnresolvedReferences
 from cython_vst_loader.vst_loader_wrapper import create_plugin, register_host_callback, host_callback_is_registered, \
     get_num_parameters, get_parameter, set_parameter, get_num_inputs, get_num_outputs, get_num_programs, \
     process_replacing, get_flags, process_double_replacing, get_parameter_name, \
-    start_plugin
+    start_plugin, process_events
 
 from cython_vst_loader.exceptions import CythonVstLoaderException
 from cython_vst_loader.vst_constants import VstAEffectFlags
+from cython_vst_loader.vst_event import VstEvent
 from cython_vst_loader.vst_host import VstHost
 
 
@@ -65,6 +67,9 @@ class VstPlugin:
 
     def get_num_programs(self) -> int:
         return get_num_programs(self._instance_pointer)
+
+    def process_events(self, events: List[VstEvent]):
+        process_events(self._instance_pointer, events)
 
     def process_replacing(self, input_channel_pointers: List[int], output_channel_pointers: List[int], block_size: int):
         process_replacing(self._instance_pointer, input_channel_pointers, output_channel_pointers, block_size)
