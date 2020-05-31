@@ -68,3 +68,9 @@ class VstNoteOnMidiEvent(VstMidiEvent):
     def __init__(self, delta_frames: int, note: int, velocity: int, channel: int):
         super().__init__(delta_frames)
         self.midi_data = self._midi_note_as_bytes(note, velocity, self._NOTE_ON, channel)
+
+
+class VstNoteOffMidiEvent(VstMidiEvent):
+    def __init__(self, delta_frames: int, note: int, channel: int):
+        super().__init__(delta_frames)
+        self.midi_data = self._midi_note_as_bytes(note, 0, self._NOTE_OFF, channel)
