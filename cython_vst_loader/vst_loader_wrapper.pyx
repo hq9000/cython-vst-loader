@@ -122,7 +122,7 @@ def get_flags(long instance_pointer)->int:
 def create_plugin(path_to_so: bytes)->int:
 
     if not os.path.exists(path_to_so):
-        raise Exception('plugin file does not exist')
+        raise Exception('plugin file does not exist: ' + str(path_to_so))
 
     global _python_host_callback
     if _python_host_callback is None:
@@ -293,7 +293,6 @@ cdef _convert_python_midi_event_into_c(python_event: PythonVstMidiEvent, VstMidi
     c_event_pointer.flags = python_event.flags
 
     for n in [0,1,2]:
-        print ("midi_data[" + str(n) + "] = " + str(python_event.midi_data[n]))
         c_event_pointer.midiData[n] = <unsigned char>python_event.midi_data[n]
 
     c_event_pointer.detune = python_event.detune
