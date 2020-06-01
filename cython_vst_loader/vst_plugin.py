@@ -1,3 +1,4 @@
+import os
 from typing import Optional, Dict, List
 
 # my Pycharm does not resolve defs from the pyx file
@@ -27,6 +28,12 @@ class VstPlugin:
     def __init__(self, path_to_shared_library: bytes, host: VstHost):
         if not host_callback_is_registered():
             register_host_callback(self._global_host_callback)
+
+        if not os.path.exists(path_to_shared_library):
+            raise FileNotFoundError('plugin file not found: ' + str(path_to_shared_library))
+
+        if not os.path.isfile(path_to_shared_library):
+            raise FileNotFoundError('plugin path does not point to a file: ' + str(path_to_shared_library))
 
         VstPlugin._temporary_context_host = host
         self._instance_pointer: int = create_plugin(path_to_shared_library)
