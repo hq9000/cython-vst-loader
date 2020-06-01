@@ -7,7 +7,17 @@ class VstHost:
     def __init__(self, sample_rate: int, buffer_size: int):
         self._sample_rate: int = sample_rate
         self._block_size: int = buffer_size
+        self._bpm: float = 120.0
 
+    @property
+    def bpm(self) -> float:
+        return self._bpm
+
+    @bpm.setter
+    def bpm(self, new_pbm: float):
+        self._bpm = new_pbm
+
+    # turn into props
     def get_sample_rate(self) -> int:
         return self._sample_rate
 
