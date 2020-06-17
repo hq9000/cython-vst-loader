@@ -92,7 +92,7 @@ class VstPlugin:
     def is_synth(self) -> bool:
         return bool(get_flags(self._instance_pointer) & VstAEffectFlags.effFlagsIsSynth)
 
-    def get_parameter_name(self, param_index: int) -> str:
+    def get_parameter_name(self, param_index: int) -> bytes:
         return get_parameter_name(self._instance_pointer, param_index)
 
     def allows_double_precision(self) -> bool:
