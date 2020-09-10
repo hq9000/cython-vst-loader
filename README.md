@@ -84,3 +84,10 @@ the resulting value can be supplied to `VstPlugin.process_replacing` as a buffer
 
 **note:** if buffers are created this way, they are managed by numpy and, therefore,
 should not be freed manually
+
+## Plugins used for testing
+
+The following open source vst plugins were compiled for linux x86_64 and put into `tests/test_plugins` directory:
+- https://github.com/amsynth/amsynth
+- https://github.com/michaelwillis/dragonfly-reverb
+
