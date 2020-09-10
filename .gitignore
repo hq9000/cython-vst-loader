@@ -1,3 +1,8 @@
 .idea
 venv
 **/*.pyc
+
+build/
+*.c
+*.so
+__pycache__
