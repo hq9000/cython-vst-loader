@@ -1,4 +1,5 @@
-from distutils.core import setup
+# from distutils.core import setup
+import setuptools
 from pathlib import Path
 import os
 
@@ -24,28 +25,21 @@ for module in ext_modules:
         "-Wno-unused-function"
     ]
 
-setup(
+setuptools.setup(
     ext_modules=ext_modules,
-    name='cython-vst-loader',  # How you named your package folder (MyLib)
-    packages=['cython-vst-loader'],  # Chose the same as "name"
-    version='0.1',  # Start with a small number and increase it with every change you make
-    license='MIT',  # Chose a license from here: https://help.github.com/articles/licensing-a-repository
+    name='cython_vst_loader',
+    packages=['cython_vst_loader'],
+    version='0.1',
+    license='MIT',
     description='a cython-based loader for VST audio plugins proving a clean python object-oriented interface',
-    # Give a short description about your library
     author='Sergey Grechin',  # Type in your name
-    author_email='grechin.sergey@gmail.com',  # Type in your E-Mail
-    url='https://github.com/hq9000/cython-vst-loader',  # Provide either the link to your github or to your website
-    download_url='https://github.com/user/reponame/archive/v_01.tar.gz',  # I explain this later on
-    keywords=['vst', 'plugin', 'cython'],  # Keywords that define your package best
-    install_requires=[  # I get to this in a second
-        'validators',
-        'beautifulsoup4',
-    ],
+    author_email='grechin.sergey@gmail.com',
+    url='https://github.com/hq9000/cython-vst-loader',
+    download_url='https://github.com/user/reponame/archive/v_01.tar.gz',
+    keywords=['vst', 'plugin', 'cython'],
     classifiers=[
         'Development Status :: 4 - Beta',
-        # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
-        'Intended Audience :: Developers',  # Define that your audience are developers
-        'Topic :: Software Development :: Build Tools',
+        'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',

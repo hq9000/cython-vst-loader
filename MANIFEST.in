@@ -1,0 +1,6 @@
+include *.txt
+recursive-include cython-vst-loader *.pyx
+recursive-include cython *.c
+recursive-include python2 *.py
+recursive-include tests *.py
+recursive-include tests *.so
