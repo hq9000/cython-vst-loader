@@ -66,9 +66,9 @@ free_buffer(left_output)
 free_buffer(right_output)
 ```
 
-### Working with buffers as numpy arrays
+### Using numpy arrays as buffers
 
-You can create buffers from numpy arrays like so:
+Although this library does not depend on numpy, you can use numpy arrays as buffers like so:
 
 ```python
 import numpy as np
