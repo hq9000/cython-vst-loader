@@ -1,8 +1,24 @@
 # cython-vst-loader
 a cython-based loader for VST audio plugins proving a clean python object-oriented interface
 
-## Usage example
+## Motivation
+The purpose is to create a stable and simple wrapper for VST plugins to be used in higher-level projects, such as https://github.com/hq9000/py_headless_daw
 
+## Installation
+
+### Through pip
+`pip install cython_vst_loader`
+
+please note that there are requirements to be satisfied by your system in order for the above to succeed:
+
+- a compiler is present (`gcc` in case of linux)
+- `make` is installed 
+- header files for your python versions are installed (`apt install python3.7-dev` in case of Ubuntu)
+
+### As a submodule
+You can add this project as a git submodule to yours.
+
+## Usage example
 
 ### Loading a plugin
 The example below does the following:

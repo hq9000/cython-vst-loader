@@ -3,12 +3,17 @@ import setuptools
 from pathlib import Path
 import os
 
+from setuptools import Extension
+
 USE_CYTHON = True
 try:
     # noinspection PyUnresolvedReferences
     from Cython.Build import cythonize
 except ImportError:
     USE_CYTHON = False
+
+USE_CYTHON = False
+
 
 this_directory = Path(__file__).parents[0]
 
@@ -25,7 +30,7 @@ if USE_CYTHON:
     )
 else:
     ext_modules = [
-        'cython_vst_loader_vst_loader_wrapper', ['cython_vst_loader/vst_loader_wrapper.c']
+        Extension("cython_vst_loader.vst_loader_wrapper", ["cython_vst_loader/vst_loader_wrapper.c"]),
     ]
 
 # workaround for https://github.com/cython/cython/issues/1480
@@ -39,7 +44,7 @@ setuptools.setup(
     ext_modules=ext_modules,
     name='cython_vst_loader',
     packages=['cython_vst_loader'],
-    version='0.1',
+    version='0.1.9',
     license='MIT',
     description='a cython-based loader for VST audio plugins proving a clean python object-oriented interface',
     author='Sergey Grechin',  # Type in your name
