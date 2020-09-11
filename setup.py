@@ -3,7 +3,12 @@ import setuptools
 from pathlib import Path
 import os
 
-from Cython.Build import cythonize
+USE_CYTHON = True
+try:
+    # noinspection PyUnresolvedReferences
+    from Cython.Build import cythonize
+except ImportError:
+    USE_CYTHON = False
 
 this_directory = Path(__file__).parents[0]
 
@@ -13,10 +18,15 @@ include_paths = [
     this_directory.as_posix() + "/build/vstsdk/pluginterfaces/vst2.x"
 ]
 
-ext_modules = cythonize(
-    'cython_vst_loader/vst_loader_wrapper.pyx',
-    compiler_directives={'language_level': "3"}
-)
+if USE_CYTHON:
+    ext_modules = cythonize(
+        'cython_vst_loader/vst_loader_wrapper.pyx',
+        compiler_directives={'language_level': "3"}
+    )
+else:
+    ext_modules = [
+        'cython_vst_loader_vst_loader_wrapper', ['cython_vst_loader/vst_loader_wrapper.c']
+    ]
 
 # workaround for https://github.com/cython/cython/issues/1480
 for module in ext_modules:
@@ -43,9 +53,5 @@ setuptools.setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',
-        'Programming Language :: Cython'
     ],
-    install_requires=[
-        'Cython>=0.29.19'
-    ]
 )
