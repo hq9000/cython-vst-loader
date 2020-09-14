@@ -6,14 +6,12 @@ import os
 from setuptools import Extension
 
 USE_CYTHON = True
+
 try:
     # noinspection PyUnresolvedReferences
     from Cython.Build import cythonize
 except ImportError:
     USE_CYTHON = False
-
-USE_CYTHON = False
-
 
 this_directory = Path(__file__).parents[0]
 
