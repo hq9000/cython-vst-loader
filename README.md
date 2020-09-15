@@ -1,5 +1,5 @@
 # cython-vst-loader
-a cython-based loader for VST audio plugins proving a clean python object-oriented interface
+a cython-based loader for VST audio plugins providing a clean python object-oriented interface
 
 ## Motivation
 The purpose is to create a stable and simple wrapper for VST plugins to be used in higher-level projects, such as https://github.com/hq9000/py_headless_daw

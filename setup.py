@@ -37,18 +37,24 @@ for module in ext_modules:
     module.extra_compile_args = [
         "-Wno-unused-function"
     ]
+with open(str(this_directory) + '/README.md', encoding='utf-8') as f:
+    long_description = f.read()
+
+with open(str(this_directory) + '/version.txt', encoding='utf-8') as f:
+    version = f.read()
 
 setuptools.setup(
     ext_modules=ext_modules,
     name='cython_vst_loader',
     packages=['cython_vst_loader'],
-    version='0.1.9',
+    version=version,
     license='MIT',
-    description='a cython-based loader for VST audio plugins proving a clean python object-oriented interface',
+    description='a cython-based loader for VST audio plugins providing a clean python object-oriented interface',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Sergey Grechin',  # Type in your name
     author_email='grechin.sergey@gmail.com',
     url='https://github.com/hq9000/cython-vst-loader',
-    download_url='https://github.com/user/reponame/archive/v_01.tar.gz',
     keywords=['vst', 'plugin', 'cython'],
     classifiers=[
         'Development Status :: 4 - Beta',
