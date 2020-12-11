@@ -44,7 +44,8 @@ def test_with_amsynth():
         assert (left_output_as_list[i] == 0.0)
 
     # now let's play a note
-    event = VstNoteOnMidiEvent(3, 85, 100, 1)
+    event_note_on = VstNoteOnMidiEvent(3, 85, 100, 1)
+    event_note_off = VstNoteOnMidiEvent(13, 85, 0, 1)
 
     faced_non_zero: bool = False
 
@@ -52,7 +53,7 @@ def test_with_amsynth():
     # this is due to the non-deterministic behaviour of this synth
     for _i in range(1, 100):
 
-        plugin.process_events([event])
+        plugin.process_events([event_note_on, event_note_off])
         plugin.process_replacing([], [right_output, left_output], 512)
 
         right_output_as_list = get_float_buffer_as_list(right_output, 512)
