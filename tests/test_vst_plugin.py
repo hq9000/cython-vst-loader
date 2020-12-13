@@ -45,7 +45,9 @@ def test_with_amsynth():
 
     # now let's play a note
     event_note_on = VstNoteOnMidiEvent(3, 85, 100, 1)
-    event_note_off = VstNoteOnMidiEvent(13, 85, 0, 1)
+    event_note_off = VstNoteOnMidiEvent(4, 85, 0, 1)
+
+    event_note_on_next = VstNoteOnMidiEvent(86, 85, 100, 1)
 
     faced_non_zero: bool = False
 
@@ -53,7 +55,7 @@ def test_with_amsynth():
     # this is due to the non-deterministic behaviour of this synth
     for _i in range(1, 100):
 
-        plugin.process_events([event_note_on, event_note_off])
+        plugin.process_events([event_note_on, event_note_off, event_note_on_next])
         plugin.process_replacing([], [right_output, left_output], 512)
 
         right_output_as_list = get_float_buffer_as_list(right_output, 512)
@@ -69,6 +71,14 @@ def test_with_amsynth():
             break
 
     assert (faced_non_zero is True)
+
+    # since we have shut the note up almost immediately, in the end of the buffer (let's say the 81-82th samples) should be 0 again
+    assert (0.0 == right_output_as_list[81])
+    assert (0.0 == left_output_as_list[82])
+
+    # however, then next note has already started on the 90th
+    assert (0.0 != right_output_as_list[95])
+    assert (0.0 != left_output_as_list[96])
 
     free_buffer(right_output)
     free_buffer(left_output)
