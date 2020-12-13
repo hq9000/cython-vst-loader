@@ -3,9 +3,9 @@
 ### Rebuilding while developing
 
 this command builds the extension using local tools (not container):
-`setup.py build_ext --inplace`
+`python setup.py build_ext --inplace`
 
-if distributions have been made on this host (they are build in containers), your directory is expected to be pollutted with root-owned files in these directories:
+if distributions have been made on this host (they are built in containers), your directory is expected to be pollutted with root-owned files in these directories:
 
 - cython_vst_loader
 - build
