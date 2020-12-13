@@ -43,6 +43,12 @@ cdef extern from "aeffectx.h":
         VstIntPtr reserved      # < zero (Reserved for future use)
         VstEvent* events[2]     # < event pointer array, variable size
 
+    cdef struct VstEvents1024:
+        VstInt32 numEvents      # < number of Events in array
+        VstIntPtr reserved      # < zero (Reserved for future use)
+        VstEvent* events[1024]       # < event pointer array, variable size
+
+
     # -------------------------------------------------------------------------------------------------------
     # VSTSDK: "MIDI Event (to be casted from VstEvent)."
     # -------------------------------------------------------------------------------------------------------
@@ -267,17 +273,19 @@ def process_events(long plugin_pointer, python_events: List[PythonVstEvent]):
     cdef VstMidiEvent *c_midi_events = <VstMidiEvent*>malloc(len(python_midi_events) * sizeof(VstMidiEvent))
 
     cdef VstMidiEvent *c_event_pointer = NULL
-    for position,python_event in enumerate(python_midi_events):
-        c_event_pointer = &c_midi_events[position]
-        _convert_python_midi_event_into_c(python_event, c_event_pointer)
-
-    cdef VstEvents events
+    cdef VstEvents1024 events
     events.numEvents = len(python_midi_events)
-    events.events[0] = <VstEvent*>c_event_pointer
 
-    _process_events(cast_plugin_pointer, &events)
+    if len(python_midi_events) > 1024:
+        print('number of events in this buffer exceeds the limit of 1024. Consider reducing size of the buffer or filing a bug on cython-vst-loader')
 
-    free(c_event_pointer)
+    for position,python_event in enumerate(python_midi_events):
+        _convert_python_midi_event_into_c(python_event, &c_midi_events[position])
+        events.events[position] = <VstEvent*>&c_midi_events[position]
+
+    _process_events(cast_plugin_pointer, <VstEvents*>&events)
+
+    free(c_midi_events)
 
 #=================================================================================
 # Private
