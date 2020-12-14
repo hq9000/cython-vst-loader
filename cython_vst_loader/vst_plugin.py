@@ -6,7 +6,7 @@ from typing import Optional, Dict, List
 from cython_vst_loader.vst_loader_wrapper import create_plugin, register_host_callback, host_callback_is_registered, \
     get_num_parameters, get_parameter, set_parameter, get_num_inputs, get_num_outputs, get_num_programs, \
     process_replacing, get_flags, process_double_replacing, get_parameter_name, \
-    start_plugin, process_events
+    start_plugin, process_events_16, process_events_1024
 
 from cython_vst_loader.exceptions import CythonVstLoaderException
 from cython_vst_loader.vst_constants import VstAEffectFlags
@@ -15,6 +15,8 @@ from cython_vst_loader.vst_host import VstHost
 
 
 class VstPlugin:
+    MAX_EVENTS_PER_PROCESS_EVENTS_CALL = 1024
+
     # needed for temporarily setting the host
     # on plugin initialization,
     # reason: plugins might want to do some host callbacks
@@ -76,7 +78,14 @@ class VstPlugin:
         return get_num_programs(self._instance_pointer)
 
     def process_events(self, events: List[VstEvent]):
-        process_events(self._instance_pointer, events)
+        if len(events) > self.MAX_EVENTS_PER_PROCESS_EVENTS_CALL:
+            raise ValueError(
+                f"passing more than {str(self.MAX_EVENTS_PER_PROCESS_EVENTS_CALL)} is not supported (error: edaa3dff)")
+
+        if len(events) <= 16:
+            process_events_16(self._instance_pointer, events)
+        else:
+            process_events_1024(self._instance_pointer, events)
 
     def process_replacing(self, input_channel_pointers: List[int], output_channel_pointers: List[int], block_size: int):
         process_replacing(self._instance_pointer, input_channel_pointers, output_channel_pointers, block_size)

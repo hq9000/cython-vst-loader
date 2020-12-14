@@ -20,7 +20,7 @@ DEF MAGIC = int.from_bytes(b'VstP', 'big')
 # amsynth uses longer names, thus we will allocate a bigger buffer for those:
 DEF MAX_PARAMETER_NAME_LENGTH = 64
 
-cdef extern from "aeffectx.h":
+cdef extern from "aeffectx_with_additional_structures.h":
 
     ctypedef int32_t VstInt32
     ctypedef int64_t VstIntPtr
@@ -42,6 +42,18 @@ cdef extern from "aeffectx.h":
         VstInt32 numEvents      # < number of Events in array
         VstIntPtr reserved      # < zero (Reserved for future use)
         VstEvent* events[2]     # < event pointer array, variable size
+
+    cdef struct VstEvents1024:
+        VstInt32 numEvents      # < number of Events in array
+        VstIntPtr reserved      # < zero (Reserved for future use)
+        VstEvent* events[1024]  # < event pointer array, variable size
+
+
+    cdef struct VstEvents16:
+        VstInt32 numEvents      # < number of Events in array
+        VstIntPtr reserved      # < zero (Reserved for future use)
+        VstEvent* events[16]  # < event pointer array, variable size
+
 
     # -------------------------------------------------------------------------------------------------------
     # VSTSDK: "MIDI Event (to be casted from VstEvent)."
@@ -259,25 +271,42 @@ def dispatch_to_plugin(long plugin_pointer, VstInt32 opcode, VstInt32 index, Vst
     # AEffect* effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void* ptr, float opt
     return cast_plugin_pointer.dispatcher(cast_plugin_pointer, opcode, index, value, cast_parameter_pointer, opt)
 
+def process_events_16(long plugin_pointer, python_events: List[PythonVstEvent]):
+    """
+    processes at most 16 events
 
-def process_events(long plugin_pointer, python_events: List[PythonVstEvent]):
+    Why? I couldn't find a way to pass a dynamically sized list of events, so I introduced
+    two versions of the function the one that sends at most 16 events, and the one for the case of 1024.
+
+    This two stepped approach is to avoid unnecessarily allocating too much space in stack when normally this number is
+    well beyond 16.
+    """
+    cdef VstEvents16 events
+    _process_events_variable_length(plugin_pointer, python_events, <long>&events)
+
+def process_events_1024(long plugin_pointer, python_events: List[PythonVstEvent]):
+    """
+    processes at most 1024 events
+    """
+    cdef VstEvents1024 events
+    _process_events_variable_length(plugin_pointer, python_events, <long>&events)
+
+def _process_events_variable_length(long plugin_pointer, python_events: List[PythonVstEvent], long passed_events_pointer):
     python_midi_events = [python_event for python_event in python_events if python_event.is_midi()]
 
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_pointer
     cdef VstMidiEvent *c_midi_events = <VstMidiEvent*>malloc(len(python_midi_events) * sizeof(VstMidiEvent))
-
+    cdef VstEvents1024 *events = <VstEvents1024*>passed_events_pointer
     cdef VstMidiEvent *c_event_pointer = NULL
-    for position,python_event in enumerate(python_midi_events):
-        c_event_pointer = &c_midi_events[position]
-        _convert_python_midi_event_into_c(python_event, c_event_pointer)
-
-    cdef VstEvents events
     events.numEvents = len(python_midi_events)
-    events.events[0] = <VstEvent*>c_event_pointer
 
-    _process_events(cast_plugin_pointer, &events)
+    for position,python_event in enumerate(python_midi_events):
+        _convert_python_midi_event_into_c(python_event, &c_midi_events[position])
+        events.events[position] = <VstEvent*>&c_midi_events[position]
 
-    free(c_event_pointer)
+    _process_events(cast_plugin_pointer, <VstEvents*>events)
+
+    free(c_midi_events)
 
 #=================================================================================
 # Private
