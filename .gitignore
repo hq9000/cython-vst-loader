@@ -6,3 +6,5 @@ build/
 *.c
 *.so
 __pycache__
+dist/
+*.egg-info

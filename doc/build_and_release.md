@@ -6,4 +6,5 @@ Currently, building and releasing is a semi-manual process.
 
 1. Step a version by changing it in `version.txt`
 2. `bash release.sh`
-
+    - during the process, it will ask for pypi login/password
+3. commit version change into git
