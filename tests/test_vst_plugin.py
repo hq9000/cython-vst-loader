@@ -9,7 +9,7 @@ from cython_vst_loader.vst_host import VstHost
 from cython_vst_loader.vst_plugin import VstPlugin
 
 
-def test_with_amsynth():
+def test_with_amsynth_general():
     host = VstHost(44100, 512)
 
     this_dir: str = os.path.dirname(os.path.realpath(__file__))
@@ -82,6 +82,53 @@ def test_with_amsynth():
 
     free_buffer(right_output)
     free_buffer(left_output)
+
+
+def test_amsynth_many_events_to_process():
+    host = VstHost(44100, 512)
+
+    this_dir: str = os.path.dirname(os.path.realpath(__file__))
+    plugin_path: str = this_dir + "/test_plugins/amsynth-vst.x86_64-linux.so"
+    plugin = VstPlugin(plugin_path.encode('utf-8'), host)
+
+    event_nums = [1, 3, 15, 16, 32, 512, 1023, 1024]
+
+    for num in event_nums:
+        events = [VstNoteOnMidiEvent(3, 85, 100, 1)] * num
+        plugin.process_events(events)
+
+        right_output = allocate_float_buffer(512, 1)
+        left_output = allocate_float_buffer(512, 1)
+
+        right_output_as_list = get_float_buffer_as_list(right_output, 512)
+        left_output_as_list = get_float_buffer_as_list(left_output, 512)
+        assert (1.0 == right_output_as_list[95])
+        assert (1.0 == left_output_as_list[96])
+        plugin.process_replacing([], [right_output, left_output], 512)
+
+        right_output_as_list = get_float_buffer_as_list(right_output, 512)
+        left_output_as_list = get_float_buffer_as_list(left_output, 512)
+
+        assert (1.0 != right_output_as_list[95])
+        assert (1.0 != left_output_as_list[96])
+
+        free_buffer(right_output)
+        free_buffer(left_output)
+
+
+def test_amsynth_limitation_on_num_events():
+    host = VstHost(44100, 512)
+
+    this_dir: str = os.path.dirname(os.path.realpath(__file__))
+    plugin_path: str = this_dir + "/test_plugins/amsynth-vst.x86_64-linux.so"
+    plugin = VstPlugin(plugin_path.encode('utf-8'), host)
+
+    events = [VstNoteOnMidiEvent(3, 85, 100, 1)] * 1025
+    try:
+        plugin.process_events(events)
+        raise ValueError('this line should not have been reached. Exception should have been thrown before')
+    except ValueError as e:
+        assert (str(e).endswith('(error: edaa3dff)'))
 
 
 def test_with_dragonfly_reverb():
