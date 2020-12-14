@@ -272,14 +272,20 @@ def dispatch_to_plugin(long plugin_pointer, VstInt32 opcode, VstInt32 index, Vst
     return cast_plugin_pointer.dispatcher(cast_plugin_pointer, opcode, index, value, cast_parameter_pointer, opt)
 
 def process_events_16(long plugin_pointer, python_events: List[PythonVstEvent]):
+    """
+    processes at most 16 events
+    """
     cdef VstEvents16 events
-    process_events(plugin_pointer, python_events, <long>&events)
+    _process_events_variable_length(plugin_pointer, python_events, <long>&events)
 
 def process_events_1024(long plugin_pointer, python_events: List[PythonVstEvent]):
+    """
+    processes at most 1024 events
+    """
     cdef VstEvents1024 events
-    process_events(plugin_pointer, python_events, <long>&events)
+    _process_events_variable_length(plugin_pointer, python_events, <long>&events)
 
-def process_events(long plugin_pointer, python_events: List[PythonVstEvent], long passed_events_pointer):
+def _process_events_variable_length(long plugin_pointer, python_events: List[PythonVstEvent], long passed_events_pointer):
     python_midi_events = [python_event for python_event in python_events if python_event.is_midi()]
 
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_pointer
