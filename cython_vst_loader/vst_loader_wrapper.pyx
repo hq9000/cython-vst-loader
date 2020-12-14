@@ -274,6 +274,12 @@ def dispatch_to_plugin(long plugin_pointer, VstInt32 opcode, VstInt32 index, Vst
 def process_events_16(long plugin_pointer, python_events: List[PythonVstEvent]):
     """
     processes at most 16 events
+
+    Why? I couldn't find a way to pass a dynamically sized list of events, so I introduced
+    two versions of the function the one that sends at most 16 events, and the one for the case of 1024.
+
+    This two stepped approach is to avoid unnecessarily allocating too much space in stack when normally this number is
+    well beyond 16.
     """
     cdef VstEvents16 events
     _process_events_variable_length(plugin_pointer, python_events, <long>&events)
