@@ -80,7 +80,7 @@ Currently, the maximum number of events processed per one buffer is 1024.
 This seems like a reasonable assumption for most use cases. 
 
 A PR is welcome if you see an elegant way to lift this limitation.
-(see the change set of #7 for reference) 
+(see the change set in https://github.com/hq9000/cython-vst-loader/pull/8 for reference) 
 
 
 ### Freeing up buffers
