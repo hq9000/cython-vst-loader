@@ -1,3 +1,4 @@
+#include "aeffectx.h"
 
 struct VstEvents16
 {

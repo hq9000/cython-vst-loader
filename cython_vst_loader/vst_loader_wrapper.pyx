@@ -20,7 +20,7 @@ DEF MAGIC = int.from_bytes(b'VstP', 'big')
 # amsynth uses longer names, thus we will allocate a bigger buffer for those:
 DEF MAX_PARAMETER_NAME_LENGTH = 64
 
-cdef extern from "aeffectx.h":
+cdef extern from "aeffectx_with_additional_structures.h":
 
     ctypedef int32_t VstInt32
     ctypedef int64_t VstIntPtr
@@ -273,18 +273,18 @@ def dispatch_to_plugin(long plugin_pointer, VstInt32 opcode, VstInt32 index, Vst
 
 def process_events_16(long plugin_pointer, python_events: List[PythonVstEvent]):
     cdef VstEvents16 events
-    process_events(plugin_pointer, python_events, &events)
+    process_events(plugin_pointer, python_events, <long>&events)
 
 def process_events_1024(long plugin_pointer, python_events: List[PythonVstEvent]):
     cdef VstEvents1024 events
-    process_events(plugin_pointer, python_events, &events)
+    process_events(plugin_pointer, python_events, <long>&events)
 
-def process_events(long plugin_pointer, python_events: List[PythonVstEvent], void* passed_events):
+def process_events(long plugin_pointer, python_events: List[PythonVstEvent], long passed_events_pointer):
     python_midi_events = [python_event for python_event in python_events if python_event.is_midi()]
 
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_pointer
     cdef VstMidiEvent *c_midi_events = <VstMidiEvent*>malloc(len(python_midi_events) * sizeof(VstMidiEvent))
-    cdef VstEvents1024 *events = <VstEvents1024*>passed_events
+    cdef VstEvents1024 *events = <VstEvents1024*>passed_events_pointer
     cdef VstMidiEvent *c_event_pointer = NULL
     events.numEvents = len(python_midi_events)
 

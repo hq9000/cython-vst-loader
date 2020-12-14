@@ -18,7 +18,8 @@ this_directory = Path(__file__).parents[0]
 os.system("make")
 
 include_paths = [
-    this_directory.as_posix() + "/build/vstsdk/pluginterfaces/vst2.x"
+    this_directory.as_posix() + "/build/vstsdk/pluginterfaces/vst2.x",
+    this_directory.as_posix() + "/cython_vst_loader/include"
 ]
 
 if USE_CYTHON:
