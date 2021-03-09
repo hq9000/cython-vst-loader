@@ -1,6 +1,6 @@
 from typing import Callable, List
 from libc.stdlib cimport malloc, free
-# from posix.dlfcn cimport dlopen, dlsym, RTLD_LAZY, dlerror
+from posix.dlfcn cimport dlopen, dlsym, RTLD_LAZY, dlerror
 from libc.stdint cimport int64_t, int32_t
 from cython_vst_loader.vst_constants import AEffectOpcodes
 from cython_vst_loader.vst_event import VstEvent as PythonVstEvent, VstMidiEvent as PythonVstMidiEvent
@@ -351,10 +351,22 @@ cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*>0:
     """
     main loader function
     """
-    # cdef char *entry_function_name = "VSTPluginMain"
-    # cdef void *handle = dlopen(path_to_so, RTLD_LAZY)
-    # cdef char* error
-    return NULL
+    cdef char *entry_function_name = "VSTPluginMain"
+    cdef void *handle = dlopen(path_to_so, RTLD_LAZY)
+    cdef char* error
+    if handle is NULL:
+        error = dlerror()
+        raise Exception(b"null pointer handle as a result of dlopen: " + error)
+
+    # some plugins seem to use "main" instead of "VSTPluginMain"
+    cdef vstPluginFuncPtr entry_function = <vstPluginFuncPtr> dlsym(handle, b"main")
+
+    if entry_function is NULL:
+        error = dlerror()
+        raise Exception(b"null pointer when looking up entry function: " + error)
+
+    cdef AEffect *plugin_ptr = entry_function(_c_host_callback)
+    return plugin_ptr
 
 cdef _suspend_plugin(AEffect *plugin):
     plugin.dispatcher(plugin, AEffectOpcodes.effMainsChanged, 0, 0, NULL, 0.0)

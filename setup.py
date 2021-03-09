@@ -35,9 +35,9 @@ else:
 # workaround for https://github.com/cython/cython/issues/1480
 for module in ext_modules:
     module.include_dirs = include_paths
-    # module.extra_compile_args = [
-    #     "-Wno-unused-function"
-    # ]
+    module.extra_compile_args = [
+        "-Wno-unused-function"
+    ]
 with open(str(this_directory) + '/README.md', encoding='utf-8') as f:
     long_description = f.read()
 
