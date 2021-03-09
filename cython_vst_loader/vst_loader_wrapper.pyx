@@ -263,15 +263,20 @@ def get_parameter(long plugin_pointer, int index)->float:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
     return cast_plugin_pointer.getParameter(cast_plugin_pointer, index)
 
-def start_plugin(long plugin_instance_pointer, int sample_rate, int block_size):
+def start_plugin(DWORD plugin_instance_pointer, int sample_rate, int block_size):
     cdef float sample_rate_as_float = <float>sample_rate
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_instance_pointer
 
+    print("start_plugin: plugin pointer as int = " + str(plugin_instance_pointer))
+    print("start_plugin.1")
     cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
+    print("start_plugin.2")
     cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effSetSampleRate, 0, 0, NULL, sample_rate)
+    print("start_plugin.3")
     cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effSetBlockSize, 0, block_size, NULL, 0.0)
-
+    print("start_plugin.4")
     _resume_plugin(cast_plugin_pointer)
+    print("start_plugin.5")
 
 def get_num_parameters(long plugin_pointer) -> int:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
@@ -361,17 +366,23 @@ cdef _convert_python_midi_event_into_c(python_event: PythonVstMidiEvent, VstMidi
 
 
 cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void *ptr, float opt):
+    print("_c_host_callback called")
+
     cdef long plugin_instance_identity = <long>effect
     cdef VstIntPtr result
+    print("1")
     (return_code, data_to_write) = _python_host_callback(plugin_instance_identity, opcode, index, value, <long>ptr, opt)
+    print("2")
     result = return_code
 
     if data_to_write is not None:
         if not isinstance(data_to_write, bytes):
             raise Exception('data_to_write is not bytes')
+
         memcpy(ptr,<void*>data_to_write, len(data_to_write))
 
-    # print("returning result " + str(result))
+
+    print("returning result " + str(result))
     # print("result from python " + str(result_from_python))
     return result
 
@@ -408,14 +419,22 @@ cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*>0:
         cdef DWORD error_code = GetLastError()
 
         if handle is NULL:
+            print(b"null pointer when loading a DLL. Error code = " + str(error_code))
             raise Exception(b"null pointer when loading a DLL. Error code = " + str(error_code))
 
 
         cdef vstPluginFuncPtr entry_function = <vstPluginFuncPtr>GetProcAddress(handle, "VSTPluginMain");
         if entry_function is NULL:
+            print(b"null pointer when obtaining an address of the entry function. Error code = " + str(error_code))
             raise Exception(b"null pointer when obtaining an address of the entry function. Error code = " + str(error_code))
 
+        print("_load_vst.1")
         cdef AEffect *plugin_ptr = entry_function(_c_host_callback)
+        print("_load_vst.2: result from entry function is " + str(<DWORD>plugin_ptr))
+        print("_load_vst.3")
+        plugin_ptr.dispatcher(plugin_ptr, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
+        print("_load_vst.4")
+
         return plugin_ptr
 
 
