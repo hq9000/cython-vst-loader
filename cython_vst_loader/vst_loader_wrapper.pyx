@@ -1,6 +1,10 @@
 from typing import Callable, List
 from libc.stdlib cimport malloc, free
-from posix.dlfcn cimport dlopen, dlsym, RTLD_LAZY, dlerror
+
+# https://cython.readthedocs.io/en/latest/src/userguide/language_basics.html#conditional-statements
+IF UNAME_SYSNAME != "Windows":
+    from posix.dlfcn cimport dlopen, dlsym, RTLD_LAZY, dlerror
+
 from libc.stdint cimport int64_t, int32_t
 from cython_vst_loader.vst_constants import AEffectOpcodes
 from cython_vst_loader.vst_event import VstEvent as PythonVstEvent, VstMidiEvent as PythonVstMidiEvent
@@ -19,6 +23,32 @@ DEF MAGIC = int.from_bytes(b'VstP', 'big')
 # "
 # amsynth uses longer names, thus we will allocate a bigger buffer for those:
 DEF MAX_PARAMETER_NAME_LENGTH = 64
+
+IF UNAME_SYSNAME == "Windows":
+
+    cdef extern from "windows.h":
+        pass
+
+    cdef extern from "libloaderapi.h":
+
+        # windows types
+        # https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types
+
+        ctypedef void* PVOID
+        ctypedef PVOID HANDLE
+        ctypedef HANDLE HINSTANCE
+        ctypedef HINSTANCE HMODULE
+
+        ctypedef unsigned long DWORD
+        ctypedef char CHAR
+        ctypedef CHAR* LPCSTR
+
+        HMODULE LoadLibraryExA(LPCSTR lpLibFileName, HANDLE hFile, DWORD  dwFlags)
+        HMODULE LoadLibraryA(LPCSTR lpLibFileName)
+        DWORD GetLastError()
+
+        ctypedef void* (*FARPROC)()
+        FARPROC GetProcAddress(HMODULE hModule, LPCSTR  lpProcName);
 
 cdef extern from "aeffectx_with_additional_structures.h":
 
@@ -348,25 +378,46 @@ cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index,
 ctypedef AEffect *(*vstPluginFuncPtr)(audioMasterCallback host)
 
 cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*>0:
-    """
-    main loader function
-    """
-    cdef char *entry_function_name = "VSTPluginMain"
-    cdef void *handle = dlopen(path_to_so, RTLD_LAZY)
-    cdef char* error
-    if handle is NULL:
-        error = dlerror()
-        raise Exception(b"null pointer handle as a result of dlopen: " + error)
+    # https://cython.readthedocs.io/en/latest/src/userguide/language_basics.html#conditional-statements
+    IF UNAME_SYSNAME != "Windows":
+        """
+        main loader function for linux
+        """
+        cdef char *entry_function_name = "VSTPluginMain"
+        cdef void *handle = dlopen(path_to_so, RTLD_LAZY)
+        cdef char* error
+        if handle is NULL:
+            error = dlerror()
+            raise Exception(b"null pointer handle as a result of dlopen: " + error)
 
-    # some plugins seem to use "main" instead of "VSTPluginMain"
-    cdef vstPluginFuncPtr entry_function = <vstPluginFuncPtr> dlsym(handle, b"main")
+        # some plugins seem to use "main" instead of "VSTPluginMain"
+        cdef vstPluginFuncPtr entry_function = <vstPluginFuncPtr> dlsym(handle, b"main")
 
-    if entry_function is NULL:
-        error = dlerror()
-        raise Exception(b"null pointer when looking up entry function: " + error)
+        if entry_function is NULL:
+            error = dlerror()
+            raise Exception(b"null pointer when looking up entry function: " + error)
 
-    cdef AEffect *plugin_ptr = entry_function(_c_host_callback)
-    return plugin_ptr
+        cdef AEffect *plugin_ptr = entry_function(_c_host_callback)
+        return plugin_ptr
+    ELSE:
+        """
+        main loader function for Windows
+        """
+        # https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexa
+        cdef HMODULE handle = LoadLibraryA(path_to_so)
+        cdef DWORD error_code = GetLastError()
+
+        if handle is NULL:
+            raise Exception(b"null pointer when loading a DLL. Error code = " + str(error_code))
+
+
+        cdef vstPluginFuncPtr entry_function = <vstPluginFuncPtr>GetProcAddress(handle, "VSTPluginMain");
+        if entry_function is NULL:
+            raise Exception(b"null pointer when obtaining an address of the entry function. Error code = " + str(error_code))
+
+        cdef AEffect *plugin_ptr = entry_function(_c_host_callback)
+        return plugin_ptr
+
 
 cdef _suspend_plugin(AEffect *plugin):
     plugin.dispatcher(plugin, AEffectOpcodes.effMainsChanged, 0, 0, NULL, 0.0)

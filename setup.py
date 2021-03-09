@@ -22,6 +22,11 @@ include_paths = [
     this_directory.as_posix() + "/cython_vst_loader/include"
 ]
 
+
+def is_windows():
+    return os.name == 'nt'
+
+
 if USE_CYTHON:
     ext_modules = cythonize(
         'cython_vst_loader/vst_loader_wrapper.pyx',
@@ -35,9 +40,12 @@ else:
 # workaround for https://github.com/cython/cython/issues/1480
 for module in ext_modules:
     module.include_dirs = include_paths
-    module.extra_compile_args = [
-        "-Wno-unused-function"
-    ]
+
+    if not is_windows():
+        module.extra_compile_args = [
+            "-Wno-unused-function"
+        ]
+
 with open(str(this_directory) + '/README.md', encoding='utf-8') as f:
     long_description = f.read()
 
