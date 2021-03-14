@@ -13,4 +13,6 @@ class MyTestCase(unittest.TestCase):
         plugin_path: str = this_dir + "/test_plugins/Synth1_vst.x86_64-windows.dll"
         plugin = VstPlugin(plugin_path.encode('utf-8'), host)
         print(plugin.get_num_parameters())
+
+        print(plugin.get_parameter_name(3))
         pass

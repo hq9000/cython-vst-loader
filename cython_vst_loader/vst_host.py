@@ -1,3 +1,4 @@
+from cython_vst_loader.exceptions import CythonVstLoaderException
 from cython_vst_loader.vst_constants import AudioMasterOpcodes
 
 
@@ -36,5 +37,9 @@ class VstHost:
             res = (self._sample_rate, None)
         elif opcode == AudioMasterOpcodes.audioMasterGetProductString:
             res = (0, b"CythonVstLoader")
+        elif opcode == AudioMasterOpcodes.audioMasterWantMidi:
+            res = (False, None)
+        else:
+            raise CythonVstLoaderException(f"plugin-to-host opcode {str(opcode)} is not supported");
 
         return res

@@ -157,7 +157,7 @@ def register_host_callback(python_host_callback: Callable)->void:
     global _python_host_callback
     _python_host_callback = python_host_callback
 
-def get_flags(long instance_pointer)->int:
+def get_flags(long long instance_pointer)->int:
     cdef AEffect* cast_plugin_pointer = <AEffect*>instance_pointer
     return cast_plugin_pointer.flags
 
@@ -171,6 +171,8 @@ def create_plugin(path_to_so: bytes)->int:
        raise Exception('python host callback has not been registered')
 
     c_plugin_pointer = _load_vst(path_to_so)
+
+
     if MAGIC != c_plugin_pointer.magic:
         raise Exception('MAGIC is wrong')
 
@@ -180,15 +182,15 @@ def allocate_float_buffer(int size, float fill_with) -> int:
     cdef float *ptr = <float*>malloc(size * sizeof(float))
     for i in range(0,size):
         ptr[i] = fill_with
-    return <long>ptr
+    return <long long>ptr
 
 def allocate_double_buffer(int size, double fill_with) -> int:
     cdef double *ptr = <double*>malloc(size * sizeof(double))
     for i in range(0,size):
         ptr[i] = fill_with
-    return <long>ptr
+    return <long long>ptr
 
-def get_float_buffer_as_list(long buffer_pointer, int size) -> List[float]:
+def get_float_buffer_as_list(long long buffer_pointer, int size) -> List[float]:
     cdef float *ptr = <float*>buffer_pointer
     res = []
     for i in range(0,size):
@@ -196,7 +198,7 @@ def get_float_buffer_as_list(long buffer_pointer, int size) -> List[float]:
 
     return res
 
-def get_double_buffer_as_list(long buffer_pointer, int size) -> List[float]:
+def get_double_buffer_as_list(long long buffer_pointer, int size) -> List[float]:
     cdef double *ptr = <double*>buffer_pointer
     res = []
     for i in range(0,size):
@@ -211,7 +213,7 @@ def free_buffer(long pointer):
 DEF MAX_CHANNELS=10
 
 # noinspection DuplicatedCode
-def process_replacing(long plugin_pointer, input_pointer_list: List[int], output_pointer_list: List[int], num_frames: int):
+def process_replacing(long long plugin_pointer, input_pointer_list: List[int], output_pointer_list: List[int], num_frames: int):
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_pointer
 
     num_input_channels = len(input_pointer_list)
@@ -267,7 +269,6 @@ def start_plugin(long long plugin_instance_pointer, int sample_rate, int block_s
     cdef float sample_rate_as_float = <float>sample_rate
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_instance_pointer
 
-    print("start_plugin: plugin pointer as int = " + str(plugin_instance_pointer))
     print("start_plugin.1")
     cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
     print("start_plugin.2")
@@ -282,31 +283,31 @@ def get_num_parameters(long long plugin_pointer) -> int:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
     return cast_plugin_pointer.numParams
 
-def get_num_inputs(long plugin_pointer) -> int:
+def get_num_inputs(long long plugin_pointer) -> int:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
     return cast_plugin_pointer.numInputs
 
-def get_num_outputs(long plugin_pointer) -> int:
+def get_num_outputs(long long plugin_pointer) -> int:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
     return cast_plugin_pointer.numOutputs
 
-def get_num_programs(long plugin_pointer) -> int:
+def get_num_programs(long long plugin_pointer) -> int:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
     return cast_plugin_pointer.numPrograms
 
-def get_parameter_name(long plugin_pointer, int param_index):
+def get_parameter_name(long long plugin_pointer, int param_index):
     cdef void *buffer = malloc(MAX_PARAMETER_NAME_LENGTH * sizeof(char))
-    dispatch_to_plugin(plugin_pointer, AEffectOpcodes.effGetParamName, param_index, 0, <long>buffer, 0.0 )
+    dispatch_to_plugin(plugin_pointer, AEffectOpcodes.effGetParamName, param_index, 0, <long long>buffer, 0.0 )
     cdef char *res = <char*>buffer
     return res
 
-def dispatch_to_plugin(long plugin_pointer, VstInt32 opcode, VstInt32 index, VstInt32 value, long ptr, float opt) -> int:
+def dispatch_to_plugin(long long plugin_pointer, VstInt32 opcode, VstInt32 index, VstInt32 value, long long ptr, float opt) -> int:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
     cdef void *cast_parameter_pointer = <void*>ptr
     # AEffect* effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void* ptr, float opt
     return cast_plugin_pointer.dispatcher(cast_plugin_pointer, opcode, index, value, cast_parameter_pointer, opt)
 
-def process_events_16(long plugin_pointer, python_events: List[PythonVstEvent]):
+def process_events_16(long long plugin_pointer, python_events: List[PythonVstEvent]):
     """
     processes at most 16 events
 
@@ -326,7 +327,7 @@ def process_events_1024(long plugin_pointer, python_events: List[PythonVstEvent]
     cdef VstEvents1024 events
     _process_events_variable_length(plugin_pointer, python_events, <long>&events)
 
-def _process_events_variable_length(long plugin_pointer, python_events: List[PythonVstEvent], long passed_events_pointer):
+def _process_events_variable_length(long long plugin_pointer, python_events: List[PythonVstEvent], long passed_events_pointer):
     python_midi_events = [python_event for python_event in python_events if python_event.is_midi()]
 
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_pointer
@@ -368,11 +369,11 @@ cdef _convert_python_midi_event_into_c(python_event: PythonVstMidiEvent, VstMidi
 cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void *ptr, float opt):
     print("_c_host_callback called")
 
-    cdef long plugin_instance_identity = <long>effect
+    cdef long long plugin_instance_identity = <long long>effect
     cdef VstIntPtr result
-    print("1")
-    (return_code, data_to_write) = _python_host_callback(plugin_instance_identity, opcode, index, value, <long>ptr, opt)
-    print("2")
+    print("_c_host_callback.1")
+    (return_code, data_to_write) = _python_host_callback(plugin_instance_identity, opcode, index, value, <long long>ptr, opt)
+    print("_c_host_callback.2")
     result = return_code
 
     if data_to_write is not None:
@@ -428,16 +429,9 @@ cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*>0:
             print(b"null pointer when obtaining an address of the entry function. Error code = " + str(error_code))
             raise Exception(b"null pointer when obtaining an address of the entry function. Error code = " + str(error_code))
 
-        print("_load_vst.1")
         cdef AEffect *plugin_ptr = entry_function(_c_host_callback)
-        print("_load_vst.2: result from entry function is " + str(<DWORD>plugin_ptr))
-        print("_load_vst.3")
-
-        print("size of pointer " + str(sizeof(plugin_ptr)))
-        print("size of int " + str(sizeof(long long)))
-
-        plugin_ptr.dispatcher(plugin_ptr, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
-        print("_load_vst.4 dispatched!!!!")
+        #plugin_ptr.dispatcher(plugin_ptr, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
+        print("plugin_ptr " + str(<long long>plugin_ptr))
 
         return plugin_ptr
 
