@@ -174,7 +174,7 @@ def create_plugin(path_to_so: bytes)->int:
     if MAGIC != c_plugin_pointer.magic:
         raise Exception('MAGIC is wrong')
 
-    return <long>c_plugin_pointer
+    return <long long>c_plugin_pointer
 
 def allocate_float_buffer(int size, float fill_with) -> int:
     cdef float *ptr = <float*>malloc(size * sizeof(float))
@@ -263,7 +263,7 @@ def get_parameter(long plugin_pointer, int index)->float:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
     return cast_plugin_pointer.getParameter(cast_plugin_pointer, index)
 
-def start_plugin(DWORD plugin_instance_pointer, int sample_rate, int block_size):
+def start_plugin(long long plugin_instance_pointer, int sample_rate, int block_size):
     cdef float sample_rate_as_float = <float>sample_rate
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_instance_pointer
 
@@ -278,7 +278,7 @@ def start_plugin(DWORD plugin_instance_pointer, int sample_rate, int block_size)
     _resume_plugin(cast_plugin_pointer)
     print("start_plugin.5")
 
-def get_num_parameters(long plugin_pointer) -> int:
+def get_num_parameters(long long plugin_pointer) -> int:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
     return cast_plugin_pointer.numParams
 
@@ -432,8 +432,12 @@ cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*>0:
         cdef AEffect *plugin_ptr = entry_function(_c_host_callback)
         print("_load_vst.2: result from entry function is " + str(<DWORD>plugin_ptr))
         print("_load_vst.3")
+
+        print("size of pointer " + str(sizeof(plugin_ptr)))
+        print("size of int " + str(sizeof(long long)))
+
         plugin_ptr.dispatcher(plugin_ptr, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
-        print("_load_vst.4")
+        print("_load_vst.4 dispatched!!!!")
 
         return plugin_ptr
 
