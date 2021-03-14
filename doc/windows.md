@@ -33,10 +33,13 @@ below is an extract from that doc:
 > - Rename the file `wget64.exe` to `wget.exe` if necessary. 
 > - Move `wget.exe` to your `Git\mingw64\bin\`.
  
-Essentially, it all comes down to copying a few additional files into `c:\Program Files\Git\mingw64`
+Essentially, it all comes down to copying a few additional files into `c:\Program Files\Git\mingw64` as shown on the screenshots below:
+
+![image](https://user-images.githubusercontent.com/21345604/111060267-9db41c00-84ac-11eb-8d14-bc7fb1f0f484.png)
+![image](https://user-images.githubusercontent.com/21345604/111060356-61cd8680-84ad-11eb-997a-0044763fd7d9.png)
 
 ### Building the extension
 
 - launch git-bash
 - Activate venv: `source venv/Scripts/activate`
-- finally, build `python setup.py build_ext --inplace1`
+- finally, build `python setup.py build_ext --inplace`
