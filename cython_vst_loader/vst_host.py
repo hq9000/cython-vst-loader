@@ -39,6 +39,8 @@ class VstHost:
             res = (0, b"CythonVstLoader")
         elif opcode == AudioMasterOpcodes.audioMasterWantMidi:
             res = (False, None)
+        elif opcode == AudioMasterOpcodes.audioMasterGetTime:
+            res = (0, None)
         else:
             raise CythonVstLoaderException(f"plugin-to-host opcode {str(opcode)} is not supported");
 

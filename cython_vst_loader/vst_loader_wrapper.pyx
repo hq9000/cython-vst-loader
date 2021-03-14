@@ -222,14 +222,14 @@ def process_replacing(long long plugin_pointer, input_pointer_list: List[int], o
     cdef float *input_pointers[MAX_CHANNELS]
     cdef float *output_pointers[MAX_CHANNELS]
 
-    cdef long tmp
+    cdef long long tmp
 
     for index, pointer in enumerate(input_pointer_list):
-        tmp = <long>pointer
+        tmp = <long long>pointer
         input_pointers[index] = <float*>tmp
 
     for index, pointer in enumerate(output_pointer_list):
-        tmp = <long>pointer
+        tmp = <long long>pointer
         output_pointers[index] = <float*>tmp
 
     cast_plugin_pointer.processReplacing(cast_plugin_pointer, input_pointers, output_pointers, num_frames)
