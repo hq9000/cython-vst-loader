@@ -206,7 +206,7 @@ def get_double_buffer_as_list(long long buffer_pointer, int size) -> List[float]
 
     return res
 
-def free_buffer(long pointer):
+def free_buffer(long long pointer):
     free(<void*>pointer)
 
 # maximum number of channels a plugin can support
@@ -235,7 +235,7 @@ def process_replacing(long long plugin_pointer, input_pointer_list: List[int], o
     cast_plugin_pointer.processReplacing(cast_plugin_pointer, input_pointers, output_pointers, num_frames)
 
 # noinspection DuplicatedCode
-def process_double_replacing(long plugin_pointer, input_pointer_list: List[int], output_pointer_list: List[int], num_frames: int):
+def process_double_replacing(long long plugin_pointer, input_pointer_list: List[int], output_pointer_list: List[int], num_frames: int):
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_pointer
 
     num_input_channels = len(input_pointer_list)
@@ -257,11 +257,11 @@ def process_double_replacing(long plugin_pointer, input_pointer_list: List[int],
     cast_plugin_pointer.processDoubleReplacing(cast_plugin_pointer, input_pointers, output_pointers, num_frames)
 
 
-def set_parameter(long plugin_pointer, int index, float value):
+def set_parameter(long long plugin_pointer, int index, float value):
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
     cast_plugin_pointer.setParameter(cast_plugin_pointer, index, value)
 
-def get_parameter(long plugin_pointer, int index)->float:
+def get_parameter(long long plugin_pointer, int index)->float:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
     return cast_plugin_pointer.getParameter(cast_plugin_pointer, index)
 
@@ -320,7 +320,7 @@ def process_events_16(long long plugin_pointer, python_events: List[PythonVstEve
     cdef VstEvents16 events
     _process_events_variable_length(plugin_pointer, python_events, <long>&events)
 
-def process_events_1024(long plugin_pointer, python_events: List[PythonVstEvent]):
+def process_events_1024(long long plugin_pointer, python_events: List[PythonVstEvent]):
     """
     processes at most 1024 events
     """
