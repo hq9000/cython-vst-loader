@@ -370,7 +370,7 @@ cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index,
     print("_c_host_callback called with opcode " + str(opcode) + " index = " + str(index))
 
     if opcode == 7:
-        return <VstIntPtr>NULL
+        return <VstIntPtr>0
 
     cdef long long plugin_instance_identity = <long long>effect
     cdef VstIntPtr result
