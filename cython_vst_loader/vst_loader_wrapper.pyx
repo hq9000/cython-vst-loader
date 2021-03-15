@@ -269,7 +269,7 @@ def start_plugin(long long plugin_instance_pointer, int sample_rate, int block_s
     cdef float sample_rate_as_float = <float>sample_rate
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_instance_pointer
 
-    print("start_plugin.1")
+    print("start_plugin.1 started")
     cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
     print("start_plugin.2")
     cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effSetSampleRate, 0, 0, NULL, sample_rate)
@@ -277,7 +277,7 @@ def start_plugin(long long plugin_instance_pointer, int sample_rate, int block_s
     cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effSetBlockSize, 0, block_size, NULL, 0.0)
     print("start_plugin.4")
     _resume_plugin(cast_plugin_pointer)
-    print("start_plugin.5")
+    print("start_plugin.5 finished")
 
 def get_num_parameters(long long plugin_pointer) -> int:
     cdef AEffect *cast_plugin_pointer = <AEffect*>plugin_pointer
@@ -318,7 +318,7 @@ def process_events_16(long long plugin_pointer, python_events: List[PythonVstEve
     well beyond 16.
     """
     cdef VstEvents16 events
-    _process_events_variable_length(plugin_pointer, python_events, <long>&events)
+    _process_events_variable_length(plugin_pointer, python_events, <long long>&events)
 
 def process_events_1024(long long plugin_pointer, python_events: List[PythonVstEvent]):
     """
@@ -327,7 +327,7 @@ def process_events_1024(long long plugin_pointer, python_events: List[PythonVstE
     cdef VstEvents1024 events
     _process_events_variable_length(plugin_pointer, python_events, <long>&events)
 
-def _process_events_variable_length(long long plugin_pointer, python_events: List[PythonVstEvent], long passed_events_pointer):
+def _process_events_variable_length(long long plugin_pointer, python_events: List[PythonVstEvent], long long passed_events_pointer):
     python_midi_events = [python_event for python_event in python_events if python_event.is_midi()]
 
     cdef AEffect* cast_plugin_pointer = <AEffect*>plugin_pointer
@@ -367,7 +367,10 @@ cdef _convert_python_midi_event_into_c(python_event: PythonVstMidiEvent, VstMidi
 
 
 cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void *ptr, float opt):
-    print("_c_host_callback called")
+    print("_c_host_callback called with opcode " + str(opcode) + " index = " + str(index))
+
+    if opcode == 7:
+        return <VstIntPtr>NULL
 
     cdef long long plugin_instance_identity = <long long>effect
     cdef VstIntPtr result

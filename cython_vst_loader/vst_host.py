@@ -28,6 +28,8 @@ class VstHost:
     # noinspection PyUnusedLocal
     def host_callback(self, plugin_instance_pointer: int, opcode: int, index: int, value: float, ptr: int, opt: float):
 
+        print('called host_callback with plugin instance ' + str(plugin_instance_pointer) + ' opcode: ' + str(opcode))
+
         res = None
         if opcode == AudioMasterOpcodes.audioMasterVersion:
             res = (self.VST_VERSION, None)
