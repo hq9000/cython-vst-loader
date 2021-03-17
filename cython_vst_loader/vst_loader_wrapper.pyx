@@ -429,12 +429,8 @@ cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index,
     if data_to_write is not None:
         if isinstance(data_to_write, bytes):
             memcpy(ptr, <void*> data_to_write, len(data_to_write))
-        elif isinstance(data_to_write, PythonVstTimeInfo):
-            cdef VstTimeInfo c_time_info
-            _copy_python_vst_time_info_into_c_version(data_to_write, &c_time_info)
-            memcpy(ptr, <void*> c_time_info, sizeof(c_time_info))
         else:
-            raise Exception("this type of return value is not supported")
+            raise Exception("this type of return value is not supported here (error: 93828ccb)")
 
     print("returning result " + str(result))
     # print("result from python " + str(result_from_python))
@@ -458,11 +454,14 @@ cdef VstIntPtr _c_host_callback_for_gettimeinfo(AEffect*effect, VstInt32 opcode,
     cdef long long plugin_instance_identity = <long long> effect
     (return_code, data_to_write) = _python_host_callback(plugin_instance_identity, opcode, index, value,
                                                          <long long> ptr, opt)
+
+    cdef VstTimeInfo *vst_time_info_ptr = NULL
+
     if isinstance(data_to_write, PythonVstTimeInfo):
-        cdef VstTimeInfo *vst_time_info_ptr = <VstTimeInfo*> malloc(
-            sizeof(VstTimeInfo))  # this is obviously a memory leak, unless plugins free the mem themselves (I doubt), we'll have to take care of it somehow
+        vst_time_info_ptr = <VstTimeInfo*> malloc(
+        sizeof(VstTimeInfo)) # this is obviously a memory leak, unless plugins free the mem themselves (I doubt), we'll have to take care of it somehow
         _copy_python_vst_time_info_into_c_version(data_to_write, vst_time_info_ptr)
-        return vst_time_info_ptr
+        return <VstIntPtr>vst_time_info_ptr
     else:
         raise Exception("instance of PythonVstTimeInfo was expected (error: 094e2dc1)")
 
@@ -517,7 +516,7 @@ cdef void _copy_python_vst_time_info_into_c_version(python_version: PythonVstTim
         c_version.timeSigNumerator = python_version.time_sig_numerator
         c_version.timeSigDenominator = python_version.time_sig_denominator
         flags |= kVstTimeSigValid
-    elif any(x is not None for x in cycle_positions):
+    elif any(x is not None for x in time_sig_values):
         raise Exception(
             "either both or none of time signature numerator/denominator should be supplied (error: bc0e3784)")
 
@@ -527,7 +526,7 @@ cdef void _copy_python_vst_time_info_into_c_version(python_version: PythonVstTim
         c_version.smpteOffset = python_version.smpte_offset
         c_version.smpteFrameRate = python_version.smpte_frame_rate
         flags |= kVstSmpteValid
-    elif any(x is not None for x in cycle_positions):
+    elif any(x is not None for x in smpte_values):
         raise Exception("either both or none of smpte offset/framerate should be supplied (error: 48054728)")
 
     if python_version.samples_to_next_clock is not None:

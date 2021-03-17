@@ -63,6 +63,8 @@ class VstHost:
         res = VstTimeInfo(
             sample_pos=self.sample_position,
             sample_rate=self._sample_rate,
+            cycle_start_pos=0,
+            cycle_end_pos=10
         )
 
         return res
