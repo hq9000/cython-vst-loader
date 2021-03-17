@@ -5,7 +5,7 @@ from typing import Optional
 @dataclass
 class VstTimeInfo:
     """
-    This class is a python representation of the following struct defined in aeffectx.h
+    This class is a python representation of the following structs defined in aeffectx.h
 
     //-------------------------------------------------------------------------------------------------------
     // VstTimeInfo
@@ -51,6 +51,7 @@ class VstTimeInfo:
         kVstTransportRecording   = 1 << 3,	///< set if Host sequencer is in record mode 8
         kVstAutomationWriting    = 1 << 6,	///< set if automation write mode active (record parameter changes) 16
         kVstAutomationReading    = 1 << 7,	///< set if automation read mode active (play parameter changes) 32
+
         kVstNanosValid           = 1 << 8,	///< VstTimeInfo::nanoSeconds valid 64
         kVstPpqPosValid          = 1 << 9,	///< VstTimeInfo::ppqPos valid 128
         kVstTempoValid           = 1 << 10,	///< VstTimeInfo::tempo valid 256
@@ -63,8 +64,8 @@ class VstTimeInfo:
     };
 
     """
-    sample_pos: float
-    sample_rate: float
+    sample_pos: float  # always valid
+    sample_rate: float  # always valid
     nano_seconds: Optional[float] = None
     ppq_pos: Optional[float] = None
     tempo: Optional[float] = None
@@ -78,7 +79,7 @@ class VstTimeInfo:
     samples_to_next_clock: Optional[int] = None
 
     transport_changed_flag: bool = False
-    sequencer_is_playing_flag: bool = True
+    transport_playing_flag: bool = True
     transport_cycle_active_flag: bool = False
     transport_recording_flag: bool = False
     automation_writing_flag: bool = False

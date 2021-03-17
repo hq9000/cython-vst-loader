@@ -436,46 +436,82 @@ cdef void _copy_python_vst_time_info_into_c_version(python_version: PythonVstTim
 
     if python_version.sample_pos is not None:
         c_version.samplePos = python_version.sample_pos
-
+    else:
+        raise Exception('sample_pos should be always present ("always valid") (error: c550e595)')
 
     if python_version.sample_rate is not None:
         c_version.sampleRate = python_version.sample_rate
+    else:
+        raise Exception('sample_rate should be always present ("always valid") (error: a47a8e4e)')
 
     if python_version.nano_seconds is not None:
         c_version.nanoSeconds = python_version.nano_seconds
+        flags |= kVstNanosValid
 
     if python_version.ppq_pos is not None:
         c_version.ppqPos = python_version.ppq_pos
+        flags |= kVstPpqPosValid
 
     if python_version.tempo is not None:
         c_version.tempo = python_version.tempo
+        flags |= kVstTempoValid
 
     if python_version.bar_start_pos is not None:
         c_version.barStartPos = python_version.bar_start_pos
+        flags |= kVstBarsValid
 
-    if python_version.cycle_start_pos is not None:
-        c_version.barStartPos = python_version.bar_start_pos
+    cycle_positions = [python_version.cycle_start_pos, python_version.cycle_end_pos]
 
-    if python_version.cycle_end_pos is not None:
+    if all(x is not None for x in cycle_positions):
+        c_version.cycleStartPos = python_version.cycle_start_pos
         c_version.cycleEndPos = python_version.cycle_end_pos
+        flags |= kVstCyclePosValid
+    elif any(x is not None for x in cycle_positions):
+        raise Exception("either both or none of cycle start/end should be supplied (error: c4a02afb)")
 
-    if python_version.time_sig_numerator is not None:
+    time_sig_values = [python_version.time_sig_numerator, python_version.time_sig_denominator]
+
+    if all(x is not None for x in time_sig_values):
         c_version.timeSigNumerator = python_version.time_sig_numerator
-
-    if python_version.time_sig_denominator is not None:
         c_version.timeSigDenominator = python_version.time_sig_denominator
+        flags |= kVstTimeSigValid
+    elif any(x is not None for x in cycle_positions):
+        raise Exception("either both or none of time signature numerator/denominator should be supplied (error: bc0e3784)")
 
-    if python_version.smpte_offset is not None:
+    smpte_values = [python_version.smpte_offset, python_version.smpte_frame_rate]
+
+    if all(x is not None for x in smpte_values):
         c_version.smpteOffset = python_version.smpte_offset
-
-    if python_version.smpte_frame_rate is not None:
         c_version.smpteFrameRate = python_version.smpte_frame_rate
+        flags |= kVstSmpteValid
+    elif any(x is not None for x in cycle_positions):
+        raise Exception("either both or none of smpte offset/framerate should be supplied (error: 48054728)")
 
     if python_version.samples_to_next_clock is not None:
         c_version.samplesToNextClock = python_version.samples_to_next_clock
+        flags |= kVstClockValid
 
+    # now dealing with boolean flags
+    if python_version.transport_changed_flag:
+        flags |= kVstTransportChanged
 
-    pass
+    if python_version.transport_playing_flag:
+        flags |= kVstTransportPlaying
+
+    if python_version.transport_cycle_active_flag:
+        flags |= kVstTransportCycleActive
+
+    if python_version.transport_recording_flag:
+        flags |= kVstTransportRecording
+
+    if python_version.automation_writing_flag:
+        flags |= kVstAutomationWriting
+
+    if python_version.automation_reading_flag:
+        flags |= kVstAutomationReading
+
+    c_version.flags = flags
+
 
 ctypedef AEffect *(*vstPluginFuncPtr)(audioMasterCallback host)
 
