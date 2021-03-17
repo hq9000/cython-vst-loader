@@ -43,3 +43,10 @@ Essentially, it all comes down to copying a few additional files into `c:\Progra
 - launch git-bash
 - Activate venv: `source venv/Scripts/activate`
 - finally, build `python setup.py build_ext --inplace`
+
+
+### Plugins used for testing
+
+- [TyrellN6](https://www.amazona.de/freeware-synthesizer-tyrell-n6-plugin-vst-au-win-mac/) win64 dll
+- [Dexed](https://asb2m10.github.io/dexed/)
+- [Surge](https://github.com/surge-synthesizer/releases/releases/tag/1.6.6)

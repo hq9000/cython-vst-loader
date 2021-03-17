@@ -3,7 +3,8 @@ import unittest
 
 from cython_vst_loader.vst_event import VstNoteOnMidiEvent
 from cython_vst_loader.vst_host import VstHost
-from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer, get_float_buffer_as_list, free_buffer
+from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer, get_float_buffer_as_list, free_buffer, \
+    allocate_double_buffer
 from cython_vst_loader.vst_plugin import VstPlugin
 
 
@@ -70,35 +71,39 @@ class TestPluginsWinTestCase(unittest.TestCase):
         host = VstHost(44100, 512)
 
         this_dir: str = os.path.dirname(os.path.realpath(__file__))
-        plugin_path: str = this_dir + "/test_plugins/Synth1_vst.x86_64-windows.dll"
+        #plugin_path: str = this_dir + "/test_plugins/Synth1_vst.x86_64-windows.dll"
+        plugin_path: str = this_dir + "/test_plugins/non_distributable/TyrellN6(x64).dll"
+        #plugin_path: str = this_dir + "/test_plugins/non_distributable/helm64.dll"
+        #plugin_path: str = this_dir + "/test_plugins/non_distributable/Surge/Surge.dll"
         plugin = VstPlugin(plugin_path.encode('utf-8'), host)
 
-        event_nums = [0, 0, 3, 15, 16, 32, 512, 1023, 1024]
+        event_nums = [0, 0, 3, 0, 15, 16, 16, 16, 16, 17, 32, 512, 1023, 1024]
 
-        right_output = allocate_float_buffer(512, 1)
-        left_output = allocate_float_buffer(512, 1)
+        right_output = allocate_float_buffer(513, 1)
+        left_output = allocate_float_buffer(513, 1)
 
-        for num in event_nums:
+        for i in range(10):
+            for num in event_nums:
 
-            events = []
-            for idx in range(num):
-                events.append(VstNoteOnMidiEvent(3 + num, 85, 100, 1))
+                events = []
+                for idx in range(num):
+                    events.append(VstNoteOnMidiEvent(3 + num, 85, 100, 1))
 
-            print('>>> calling process events with ' + str(len(events)))
-            plugin.process_events(events)
+                print('>>> calling process events with ' + str(len(events)))
+                plugin.process_events(events)
 
-            # right_output_as_list = get_float_buffer_as_list(right_output, 512)
-            # left_output_as_list = get_float_buffer_as_list(left_output, 512)
-            # assert (1.0 == right_output_as_list[95])
-            # assert (1.0 == left_output_as_list[96])
-            print('>>> calling process replacing with ' + str(len(events)))
-            plugin.process_replacing([], [right_output, left_output], 512)
+                # right_output_as_list = get_float_buffer_as_list(right_output, 512)
+                # left_output_as_list = get_float_buffer_as_list(left_output, 512)
+                # assert (1.0 == right_output_as_list[95])
+                # assert (1.0 == left_output_as_list[96])
+                print('>>> calling process replacing with ' + str(len(events)) + " into buffers: l:" + str(left_output) + " r: " + str(right_output) )
+                plugin.process_replacing([], [right_output, left_output], 512)
 
-            # right_output_as_list = get_float_buffer_as_list(right_output, 512)
-            # left_output_as_list = get_float_buffer_as_list(left_output, 512)
-            #
-            # assert (1.0 != right_output_as_list[95])
-            # assert (1.0 != left_output_as_list[96])
+                # right_output_as_list = get_float_buffer_as_list(right_output, 512)
+                # left_output_as_list = get_float_buffer_as_list(left_output, 512)
+                #
+                # assert (1.0 != right_output_as_list[95])
+                # assert (1.0 != left_output_as_list[96])
 
         free_buffer(right_output)
         free_buffer(left_output)

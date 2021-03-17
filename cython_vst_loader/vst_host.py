@@ -1,6 +1,6 @@
 from cython_vst_loader.dto.vst_time_info import VstTimeInfo
 from cython_vst_loader.exceptions import CythonVstLoaderException
-from cython_vst_loader.vst_constants import AudioMasterOpcodes
+from cython_vst_loader.vst_constants import AudioMasterOpcodes, VstProcessLevels
 
 
 class VstHost:
@@ -54,6 +54,16 @@ class VstHost:
             res = (False, None)
         elif opcode == AudioMasterOpcodes.audioMasterGetTime:
             res = (0, self.generate_time_info())
+        elif opcode == AudioMasterOpcodes.audioMasterGetCurrentProcessLevel:
+            res = (VstProcessLevels.kVstProcessLevelUnknown, None)
+        elif opcode == AudioMasterOpcodes.audioMasterIOChanged:
+            res = (0, None)
+        elif opcode == AudioMasterOpcodes.audioMasterGetVendorString:
+            res = (0, b"cython vst loader")
+        elif opcode == AudioMasterOpcodes.audioMasterGetVendorVersion:
+            res = (1, None)
+        elif opcode == AudioMasterOpcodes.audioMasterSizeWindow:
+            res = (0, None)
         else:
             raise CythonVstLoaderException(f"plugin-to-host opcode {str(opcode)} is not supported");
 

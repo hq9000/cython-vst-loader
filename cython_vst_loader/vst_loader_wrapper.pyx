@@ -1,3 +1,4 @@
+from pprint import pprint
 from typing import Callable, List
 from libc.stdlib cimport malloc, free
 
@@ -135,6 +136,16 @@ cdef extern from "aeffectx_with_additional_structures.h":
         kVstTimeSigValid = 1 << 13,  #< VstTimeInfo::timeSigNumerator and VstTimeInfo::timeSigDenominator valid
         kVstSmpteValid = 1 << 14,  #< VstTimeInfo::smpteOffset and VstTimeInfo::smpteFrameRate valid
         kVstClockValid = 1 << 15  #< VstTimeInfo::samplesToNextClock valid
+
+    # -------------------------------------------------------------------------------------------------------
+    # Process Levels returned by #audioMasterGetCurrentProcessLevel. */
+    # -------------------------------------------------------------------------------------------------------
+    ctypedef enum VstProcessLevels:
+        kVstProcessLevelUnknown = 0,  #///< not supported by Host
+        kVstProcessLevelUser,  #// 1: currently in user thread (GUI)
+        kVstProcessLevelRealtime,  #///< 2: currently in audio thread (where process is called)
+        kVstProcessLevelPrefetch,  #//< 3: currently in 'sequencer' thread (MIDI, timer etc)
+        kVstProcessLevelOffline  #//< 4: currently offline processing and thus in user thread
 
     # -------------------------------------------------------------------------------------------------------
     # typedef	VstIntPtr (VSTCALLBACK *audioMasterCallback) (AEffect* effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void* ptr, float opt);
@@ -284,11 +295,11 @@ def process_double_replacing(long long plugin_pointer, input_pointer_list: List[
     cdef long tmp
 
     for index, pointer in enumerate(input_pointer_list):
-        tmp = <long> pointer
+        tmp = <long long> pointer
         input_pointers[index] = <double*> tmp
 
     for index, pointer in enumerate(output_pointer_list):
-        tmp = <long> pointer
+        tmp = <long long> pointer
         output_pointers[index] = <double*> tmp
 
     cast_plugin_pointer.processDoubleReplacing(cast_plugin_pointer, input_pointers, output_pointers, num_frames)
@@ -306,7 +317,7 @@ def start_plugin(long long plugin_instance_pointer, int sample_rate, int block_s
     cdef AEffect*cast_plugin_pointer = <AEffect*> plugin_instance_pointer
 
     print("start_plugin.1 started")
-    cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
+    # cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
     print("start_plugin.2")
     cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effSetSampleRate, 0, 0, NULL, sample_rate)
     print("start_plugin.3")
@@ -362,7 +373,7 @@ def process_events_1024(long long plugin_pointer, python_events: List[PythonVstE
     processes at most 1024 events
     """
     cdef VstEvents1024 events
-    _process_events_variable_length(plugin_pointer, python_events, <long> &events)
+    _process_events_variable_length(plugin_pointer, python_events, <long long> &events)
 
 def _process_events_variable_length(long long plugin_pointer, python_events: List[PythonVstEvent],
                                     long long passed_events_pointer):
@@ -415,22 +426,26 @@ cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index,
     :return: 
     """
     print("_c_host_callback called with opcode " + str(opcode) + " index = " + str(index) + " value: ")
-
+    print("foo 1")
     if opcode == AudioMasterOpcodes.audioMasterGetTime:
         return _c_host_callback_for_gettimeinfo(effect, opcode, index, value, ptr, opt)
 
     cdef long long plugin_instance_identity = <long long> effect
     cdef VstIntPtr result
+    print("foo 2")
     print("_c_host_callback.1")
     (return_code, data_to_write) = _python_host_callback(plugin_instance_identity, opcode, index, value,
                                                          <long long> ptr, opt)
-    print("_c_host_callback.2")
+    print("_c_host_callback.2" + str(type(return_code)))
+    pprint(return_code)
     result = return_code
+    print("_c_host_callback.21")
     if data_to_write is not None:
         if isinstance(data_to_write, bytes):
             memcpy(ptr, <void*> data_to_write, len(data_to_write))
         else:
             raise Exception("this type of return value is not supported here (error: 93828ccb)")
+    print("_c_host_callback.22")
 
     print("returning result " + str(result))
     # print("result from python " + str(result_from_python))
@@ -459,9 +474,9 @@ cdef VstIntPtr _c_host_callback_for_gettimeinfo(AEffect*effect, VstInt32 opcode,
 
     if isinstance(data_to_write, PythonVstTimeInfo):
         vst_time_info_ptr = <VstTimeInfo*> malloc(
-        sizeof(VstTimeInfo)) # this is obviously a memory leak, unless plugins free the mem themselves (I doubt), we'll have to take care of it somehow
+            sizeof(VstTimeInfo))  # this is obviously a memory leak, unless plugins free the mem themselves (I doubt), we'll have to take care of it somehow
         _copy_python_vst_time_info_into_c_version(data_to_write, vst_time_info_ptr)
-        return <VstIntPtr>vst_time_info_ptr
+        return <VstIntPtr> vst_time_info_ptr
     else:
         raise Exception("instance of PythonVstTimeInfo was expected (error: 094e2dc1)")
 
@@ -555,7 +570,6 @@ cdef void _copy_python_vst_time_info_into_c_version(python_version: PythonVstTim
     c_version.flags = flags
 
 ctypedef AEffect *(*vstPluginFuncPtr)(audioMasterCallback host)
-
 
 cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*> 0:
     """

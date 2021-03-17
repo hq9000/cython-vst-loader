@@ -63,7 +63,8 @@ class VstPlugin:
             if host is None:
                 raise CythonVstLoaderException('host is not registered for this plugin')
 
-        return host.host_callback(plugin_instance_pointer, opcode, index, value, ptr, opt)
+        res = host.host_callback(plugin_instance_pointer, opcode, index, value, ptr, opt)
+        return res
 
     def get_num_parameters(self) -> int:
         return get_num_parameters(self._instance_pointer)
