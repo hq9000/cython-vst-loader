@@ -8,7 +8,7 @@ IF UNAME_SYSNAME != "Windows":
     from posix.dlfcn cimport dlopen, dlsym, RTLD_LAZY, dlerror
 
 from libc.stdint cimport int64_t, int32_t
-from cython_vst_loader.vst_constants import AEffectOpcodes
+from cython_vst_loader.vst_constants import AEffectOpcodes, AudioMasterOpcodes
 from cython_vst_loader.vst_event import VstEvent as PythonVstEvent, VstMidiEvent as PythonVstMidiEvent
 import os.path
 from libc.string cimport memcpy
@@ -403,10 +403,21 @@ cdef _convert_python_midi_event_into_c(python_event: PythonVstMidiEvent, VstMidi
     c_event_pointer.reserved2 = python_event.reserved2
 
 cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index, VstIntPtr value, void *ptr, float opt):
+    """
+    A C-level entry for accessing host through sending "opcodes"
+    
+    :param effect: 
+    :param opcode: 
+    :param index: 
+    :param value: 
+    :param ptr: 
+    :param opt: 
+    :return: 
+    """
     print("_c_host_callback called with opcode " + str(opcode) + " index = " + str(index) + " value: ")
 
-    # try implementing some dummy stuff here for right/left locator (which seem to be requested by synth1)
-    if opcode == 7:
+    if opcode == AudioMasterOpcodes.audioMasterGetTime:
+        return _c_host_callback_for_gettimeinfo(effect, opcode, index, value, ptr, opt)
 
     cdef long long plugin_instance_identity = <long long> effect
     cdef VstIntPtr result
@@ -415,7 +426,6 @@ cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index,
                                                          <long long> ptr, opt)
     print("_c_host_callback.2")
     result = return_code
-
     if data_to_write is not None:
         if isinstance(data_to_write, bytes):
             memcpy(ptr, <void*> data_to_write, len(data_to_write))
@@ -430,8 +440,40 @@ cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index,
     # print("result from python " + str(result_from_python))
     return result
 
-cdef void _copy_python_vst_time_info_into_c_version(python_version: PythonVstTimeInfo, VstTimeInfo *c_version):
+cdef VstIntPtr _c_host_callback_for_gettimeinfo(AEffect*effect, VstInt32 opcode, VstInt32 index, VstIntPtr value,
+                                                void *ptr, float opt):
+    """
+    A specialized branch of _c_host_callback specifically dealing with getTimeInfo case
+    
+    also see implementation of VstTimeInfo* AudioEffectX::getTimeInfo (VstInt32 filter)
+    
+    :param effect: 
+    :param opcode: 
+    :param index: 
+    :param value: 
+    :param ptr: 
+    :param opt: 
+    :return: 
+    """
+    cdef long long plugin_instance_identity = <long long> effect
+    (return_code, data_to_write) = _python_host_callback(plugin_instance_identity, opcode, index, value,
+                                                         <long long> ptr, opt)
+    if isinstance(data_to_write, PythonVstTimeInfo):
+        cdef VstTimeInfo *vst_time_info_ptr = <VstTimeInfo*> malloc(
+            sizeof(VstTimeInfo))  # this is obviously a memory leak, unless plugins free the mem themselves (I doubt), we'll have to take care of it somehow
+        _copy_python_vst_time_info_into_c_version(data_to_write, vst_time_info_ptr)
+        return vst_time_info_ptr
+    else:
+        raise Exception("instance of PythonVstTimeInfo was expected (error: 094e2dc1)")
 
+cdef void _copy_python_vst_time_info_into_c_version(python_version: PythonVstTimeInfo, VstTimeInfo *c_version):
+    """
+    converts (by copying into a pre-allocated memory) a python DTO for VstTimeInfo into C struct
+    
+    :param python_version: 
+    :param c_version: 
+    :return: 
+    """
     cdef VstInt32 flags = 0
 
     if python_version.sample_pos is not None:
@@ -476,7 +518,8 @@ cdef void _copy_python_vst_time_info_into_c_version(python_version: PythonVstTim
         c_version.timeSigDenominator = python_version.time_sig_denominator
         flags |= kVstTimeSigValid
     elif any(x is not None for x in cycle_positions):
-        raise Exception("either both or none of time signature numerator/denominator should be supplied (error: bc0e3784)")
+        raise Exception(
+            "either both or none of time signature numerator/denominator should be supplied (error: bc0e3784)")
 
     smpte_values = [python_version.smpte_offset, python_version.smpte_frame_rate]
 
@@ -512,10 +555,16 @@ cdef void _copy_python_vst_time_info_into_c_version(python_version: PythonVstTim
 
     c_version.flags = flags
 
-
 ctypedef AEffect *(*vstPluginFuncPtr)(audioMasterCallback host)
 
+
 cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*> 0:
+    """
+    the main function implementing a cross-platform logic of loading a plugin (.so in linux and .dll in windows)
+    
+    :param path_to_so: 
+    :return: 
+    """
     # https://cython.readthedocs.io/en/latest/src/userguide/language_basics.html#conditional-statements
     IF UNAME_SYSNAME != "Windows":
         """

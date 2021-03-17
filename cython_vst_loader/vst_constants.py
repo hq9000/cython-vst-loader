@@ -125,7 +125,7 @@ class AEffectOpcodes:
     https://github.com/simlmx/pyvst/blob/ded9ff373f37d1cbe8948ccb053ff4849f45f4cb/pyvst/vstwrap.py#L11
     in SDK it is declared as enum AEffectOpcodes
     with a comment "Basic dispatcher Opcodes (Host to Plug-in)"
-    Apparently, a better name would be PluginToHostDispatcherOpcodes, but let's keep it
+    Apparently, a better name would be HostToPluginDispatcherOpcodes, but let's keep it
     like it is to keep it aligned with sdk
     """
 

@@ -1,3 +1,4 @@
+from cython_vst_loader.dto.vst_time_info import VstTimeInfo
 from cython_vst_loader.exceptions import CythonVstLoaderException
 from cython_vst_loader.vst_constants import AudioMasterOpcodes
 
@@ -9,6 +10,7 @@ class VstHost:
         self._sample_rate: int = sample_rate
         self._block_size: int = buffer_size
         self._bpm: float = 120.0
+        self._sample_position: int = 0
 
     @property
     def bpm(self) -> float:
@@ -17,6 +19,14 @@ class VstHost:
     @bpm.setter
     def bpm(self, new_pbm: float):
         self._bpm = new_pbm
+
+    @property
+    def sample_position(self) -> int:
+        return self._sample_position
+
+    @sample_position.setter
+    def sample_position(self, new_sample_position: int):
+        self._sample_position = new_sample_position
 
     # turn into props
     def get_sample_rate(self) -> int:
@@ -28,7 +38,7 @@ class VstHost:
     # noinspection PyUnusedLocal
     def host_callback(self, plugin_instance_pointer: int, opcode: int, index: int, value: float, ptr: int, opt: float):
 
-        print('pyton called host_callback with plugin instance ' + str(plugin_instance_pointer) + ' opcode: ' + str(
+        print('python called host_callback with plugin instance ' + str(plugin_instance_pointer) + ' opcode: ' + str(
             opcode) + " value: " + str(value))
 
         res = None
@@ -43,8 +53,16 @@ class VstHost:
         elif opcode == AudioMasterOpcodes.audioMasterWantMidi:
             res = (False, None)
         elif opcode == AudioMasterOpcodes.audioMasterGetTime:
-            res = (0, None)
+            res = (0, self.generate_time_info())
         else:
             raise CythonVstLoaderException(f"plugin-to-host opcode {str(opcode)} is not supported");
+
+        return res
+
+    def generate_time_info(self) -> VstTimeInfo:
+        res = VstTimeInfo(
+            sample_pos=self.sample_position,
+            sample_rate=self._sample_rate,
+        )
 
         return res
