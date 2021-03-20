@@ -1,7 +1,8 @@
 all: build/vstsdk
 
 build/vstsdk: build/vstsdk.zip
-	unzip build/vstsdk.zip -d build
+    # fix for linux, linux expects .zip
+	unzip build/vstsdk -d build
 	mv "build/VST3 SDK" build/vstsdk
 
 build/vstsdk.zip:
