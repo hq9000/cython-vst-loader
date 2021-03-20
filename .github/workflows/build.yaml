@@ -23,6 +23,12 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         pip install flake8
         pip install -r requirements.txt
+    - name: Cache VSTSDK
+      id: vst-sdk-cache
+      uses: actions/cache@v2
+      with:
+        path: build/vstsdk
+        key: vstsdk_cache
     - name: Build Cython module
       run: |
         python setup.py build_ext --inplace
