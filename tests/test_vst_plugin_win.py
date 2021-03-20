@@ -1,5 +1,6 @@
 import os
 import unittest
+from time import sleep
 
 from cython_vst_loader.vst_event import VstNoteOnMidiEvent
 from cython_vst_loader.vst_host import VstHost
@@ -71,18 +72,25 @@ class TestPluginsWinTestCase(unittest.TestCase):
         host = VstHost(44100, 512)
 
         this_dir: str = os.path.dirname(os.path.realpath(__file__))
-        #plugin_path: str = this_dir + "/test_plugins/Synth1_vst.x86_64-windows.dll"
-        plugin_path: str = this_dir + "/test_plugins/non_distributable/TyrellN6(x64).dll"
+        plugin_path: str = this_dir + "/test_plugins/Synth1_vst.x86_64-windows.dll"
+        plugin_path: str = this_dir + "/test_plugins/non_distributable/OB-Xd.dll"
+        # plugin_path: str = this_dir + "/test_plugins/non_distributable/TyrellN6(x64).dll"
         #plugin_path: str = this_dir + "/test_plugins/non_distributable/helm64.dll"
-        #plugin_path: str = this_dir + "/test_plugins/non_distributable/Surge/Surge.dll"
+        # plugin_path: str = this_dir + "/test_plugins/non_distributable/Surge/Surge.dll"
+        #plugin_path: str = this_dir + "/test_plugins/non_distributable/Tunefish4.dll"
+        #plugin_path: str = this_dir + "/test_plugins/non_distributabable/Dexed/Tunefish4.dll"
+
         plugin = VstPlugin(plugin_path.encode('utf-8'), host)
 
-        event_nums = [0, 0, 3, 0, 15, 16, 16, 16, 16, 17, 32, 512, 1023, 1024]
+        event_nums = [0, 0, 3, 0, 15, 16, 16, 16, 16, 17, 32, 512, 1023, 1021]
+
+        right_input = allocate_float_buffer(513, 1)
+        left_input = allocate_float_buffer(513, 1)
 
         right_output = allocate_float_buffer(513, 1)
         left_output = allocate_float_buffer(513, 1)
 
-        for i in range(10):
+        for i in range(60):
             for num in event_nums:
 
                 events = []
@@ -97,7 +105,7 @@ class TestPluginsWinTestCase(unittest.TestCase):
                 # assert (1.0 == right_output_as_list[95])
                 # assert (1.0 == left_output_as_list[96])
                 print('>>> calling process replacing with ' + str(len(events)) + " into buffers: l:" + str(left_output) + " r: " + str(right_output) )
-                plugin.process_replacing([], [right_output, left_output], 512)
+                plugin.process_replacing([right_input, left_input], [right_output, left_output], 512)
 
                 # right_output_as_list = get_float_buffer_as_list(right_output, 512)
                 # left_output_as_list = get_float_buffer_as_list(left_output, 512)

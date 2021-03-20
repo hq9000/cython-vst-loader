@@ -38,15 +38,33 @@ Essentially, it all comes down to copying a few additional files into `c:\Progra
 ![image](https://user-images.githubusercontent.com/21345604/111060267-9db41c00-84ac-11eb-8d14-bc7fb1f0f484.png)
 ![image](https://user-images.githubusercontent.com/21345604/111060356-61cd8680-84ad-11eb-997a-0044763fd7d9.png)
 
+## Install Pythons and create venvs
+
+Download from here `https://www.python.org/downloads/` and install python 3.7, 3.8, 3.9 
+
+In my case, python binaries end up here: `C:\Users\user\AppData\Local\Programs\Python\`
+
+![image](https://user-images.githubusercontent.com/21345604/111866019-71e8d880-897b-11eb-8870-91319cbbdaa4.png)
+
+create venvs:
+
+- `/c/Users/user/AppData/Local/Programs/Python/Python37/python.exe -m venv /c/home/em/test_python/venv37`
+- `/c/Users/user/AppData/Local/Programs/Python/Python38/python.exe -m venv /c/home/em/test_python/venv38`
+- `/c/Users/user/AppData/Local/Programs/Python/Python39/python.exe -m venv /c/home/em/test_python/venv39`
+
+
 ### Building the extension
 
 - launch git-bash
 - Activate venv: `source venv/Scripts/activate`
 - finally, build `python setup.py build_ext --inplace`
 
-
 ### Plugins used for testing
 
 - [TyrellN6](https://www.amazona.de/freeware-synthesizer-tyrell-n6-plugin-vst-au-win-mac/) win64 dll
 - [Dexed](https://asb2m10.github.io/dexed/)
 - [Surge](https://github.com/surge-synthesizer/releases/releases/tag/1.6.6)
+
+### Where to find python in windows
+
+
