@@ -3,6 +3,7 @@ import setuptools
 from pathlib import Path
 import os
 
+
 from setuptools import Extension
 
 USE_CYTHON = True

@@ -38,6 +38,10 @@ jobs:
     - name: Build Cython module
       run: |
         python setup.py build_ext --inplace
+    - name: build dist
+      run: |
+        python setup.py bdist_wheel
+
 
 
 
