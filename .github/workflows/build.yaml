@@ -48,6 +48,11 @@ jobs:
     - name: Inspecting dist contents
       run: |
         ls -la dist/
+    - name: upload whl as an artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: whl_${{ matrix.python-version }}
+        path: dist/*.whl
 
 
 
