@@ -3,6 +3,10 @@ name: Node CI
 on:
   push
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     runs-on: windows-latest
@@ -41,7 +45,6 @@ jobs:
     - name: build dist
       run: |
         python setup.py bdist_wheel
-
 
 
 
