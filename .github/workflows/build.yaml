@@ -45,6 +45,9 @@ jobs:
     - name: build dist
       run: |
         python setup.py bdist_wheel
+    - name: Inspecting dist contents
+      run: |
+        ls -la dist/
 
 
 
