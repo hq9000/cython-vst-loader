@@ -2,6 +2,7 @@
 import setuptools
 from pathlib import Path
 import os
+import os.path
 
 
 from setuptools import Extension
@@ -16,13 +17,13 @@ except ImportError:
 
 this_directory = Path(__file__).parents[0]
 
-os.system("make")
+if not os.path.exists(this_directory.as_posix() + "/build/vstsdk/pluginterfaces"):
+    os.system("make")
 
 include_paths = [
     this_directory.as_posix() + "/build/vstsdk/pluginterfaces/vst2.x",
     this_directory.as_posix() + "/cython_vst_loader/include"
 ]
-
 
 def is_windows():
     return os.name == 'nt'
