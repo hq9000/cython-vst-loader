@@ -8,7 +8,7 @@ defaults:
     shell: bash
 
 jobs:
-  build:
+  build_on_windows:
     runs-on: windows-latest
     strategy:
       matrix:
@@ -51,8 +51,31 @@ jobs:
     - name: upload whl as an artifact
       uses: actions/upload-artifact@v2
       with:
-        name: whl_${{ matrix.python-version }}
+        name: whl_win_${{ matrix.python-version }}
         path: dist/*.whl
 
 
-
+  release:
+    runs-on: ubuntu-latest
+    needs: [ build_on_windows ]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up python 3.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - uses: actions/download-artifact@v2
+      with:
+        name: whl_win_3.7
+        path: dist
+    - uses: actions/download-artifact@v2
+      with:
+        name: whl_win_3.8
+        path: dist
+    - uses: actions/download-artifact@v2
+      with:
+        name: whl_win_3.9
+        path: dist
+    - name: Inspecting dist after downloading artifacts
+      run: |
+        ls -la dist/
