@@ -26,6 +26,7 @@ python setup.py build_ext --inplace
 python setup.py bdist_wheel
 
 mkdir -p /cython-vst-loader/dist/manylinux
+ls -la /cython-vst-loader/dist
 auditwheel repair --plat manylinux1_x86_64 --wheel-dir /cython-vst-loader/dist/manylinux /cython-vst-loader/dist/*.whl
 #rm -f /cython-vst-loader/dist/*.whl
 deactivate

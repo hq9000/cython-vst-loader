@@ -60,6 +60,18 @@ jobs:
     - uses: actions/checkout@v2
     - name: pwd
       run: pwd
+    - name: Cache VSTSDK archive
+      id: vst-sdk-archive-cache
+      uses: actions/cache@v2
+      with:
+        path: build/vstsdk.zip
+        key: vstsdk_cache
+    - name: Cache VSTSDK
+      id: vst-sdk-cache
+      uses: actions/cache@v2
+      with:
+        path: build/vstsdk
+        key: uncompressed_vstsdk_cache
     - name: build itself
       run: bash build_scripts/build_on_host.sh
     - name: inspect dist
