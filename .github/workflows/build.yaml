@@ -58,6 +58,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: pwd
+      run: pwd
     - name: build itself
       run: bash build_scripts/build_on_host.sh
     - name: inspect dist
