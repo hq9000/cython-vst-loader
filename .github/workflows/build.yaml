@@ -59,7 +59,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: build itself
-      run: source build_scripts/build_on_host.sh
+      run: bash build_scripts/build_on_host.sh
     - name: inspect dist
       run: ls -la dist/
 
