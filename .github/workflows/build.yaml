@@ -76,6 +76,11 @@ jobs:
       run: bash build_scripts/build_on_host.sh
     - name: inspect dist
       run: tree --du dist/
+    - name: upload whls as an artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: whl_manylinux
+        path: dist/manilinux
 
   release:
     runs-on: ubuntu-latest
@@ -97,6 +102,10 @@ jobs:
     - uses: actions/download-artifact@v2
       with:
         name: whl_win_3.9
+        path: dist
+    - uses: actions/download-artifact@v2
+      with:
+        name: whl_manilinux
         path: dist
     - name: Inspecting dist after downloading artifacts
       run: |
