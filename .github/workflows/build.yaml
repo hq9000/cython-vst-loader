@@ -80,7 +80,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: whl_manylinux
-        path: dist/manilinux
+        path: dist/manylinux
 
   release:
     runs-on: ubuntu-latest
@@ -105,7 +105,7 @@ jobs:
         path: dist
     - uses: actions/download-artifact@v2
       with:
-        name: whl_manilinux
+        name: whl_manylinux
         path: dist
     - name: Inspecting dist after downloading artifacts
       run: |
