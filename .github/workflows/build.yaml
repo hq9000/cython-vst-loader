@@ -75,7 +75,7 @@ jobs:
     - name: build itself
       run: bash build_scripts/build_on_host.sh
     - name: inspect dist
-      run: ls -la dist/
+      run: tree --du dist/
 
   release:
     runs-on: ubuntu-latest
