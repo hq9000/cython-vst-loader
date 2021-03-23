@@ -72,6 +72,17 @@ jobs:
       with:
         path: build/vstsdk
         key: uncompressed_vstsdk_cache
+    - name: Cache minylinux image
+      id: manylinux-image-cache
+      uses: actions/cache@v2
+      with:
+        path:build/manylinux_image
+        key: manylinux-image-cache
+    - name: conditionally pull the image
+      run: |
+        [ -f build/manylinux_image ] && docker pull quay.io/pypa/manylinux2010_x86_64:latest && docker save quay.io/pypa/manylinux2010_x86_64:latest > build/manylinux_image
+    - name: load image from saved file
+      run: docker load build/manylinux_image
     - name: build itself
       run: bash build_scripts/build_on_host.sh
     - name: inspect dist
