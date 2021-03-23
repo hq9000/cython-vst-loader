@@ -100,5 +100,4 @@ jobs:
         path: dist
     - name: Inspecting dist after downloading artifacts
       run: |
-        ls -la dist/
-        ls -la dist/manylinux
+        tree --du dist/
