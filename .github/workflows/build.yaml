@@ -76,7 +76,7 @@ jobs:
       id: manylinux-image-cache
       uses: actions/cache@v2
       with:
-        path:build/manylinux_image
+        path: build/manylinux_image
         key: manylinux-image-cache
     - name: conditionally pull the image
       run: |
