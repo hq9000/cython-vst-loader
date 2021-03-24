@@ -12,7 +12,8 @@ from cython_vst_loader.vst_host import VstHost
 from cython_vst_loader.vst_plugin import VstPlugin
 
 
-@unittest.skipIf(platform != 'Linux', 'this test case is supposed to be run on linux only')
+@unittest.skipIf(platform != 'Linux',
+                 'this test case is supposed to be run on linux only, and this platform is ' + str(platform))
 class TestInLinux(unittest.TestCase):
 
     def test_with_amsynth_general():
