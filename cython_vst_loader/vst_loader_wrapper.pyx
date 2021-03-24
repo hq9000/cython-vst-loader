@@ -316,15 +316,10 @@ def start_plugin(long long plugin_instance_pointer, int sample_rate, int block_s
     cdef float sample_rate_as_float = <float> sample_rate
     cdef AEffect*cast_plugin_pointer = <AEffect*> plugin_instance_pointer
 
-    print("start_plugin.1 started")
-    # cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
-    print("start_plugin.2")
+    cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
     cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effSetSampleRate, 0, 0, NULL, sample_rate)
-    print("start_plugin.3")
     cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effSetBlockSize, 0, block_size, NULL, 0.0)
-    print("start_plugin.4")
     _resume_plugin(cast_plugin_pointer)
-    print("start_plugin.5 finished")
 
 def get_num_parameters(long long plugin_pointer) -> int:
     cdef AEffect *cast_plugin_pointer = <AEffect*> plugin_pointer
@@ -425,30 +420,21 @@ cdef VstIntPtr _c_host_callback(AEffect*effect, VstInt32 opcode, VstInt32 index,
     :param opt: 
     :return: 
     """
-    print("_c_host_callback called with opcode " + str(opcode) + " index = " + str(index) + " value: ")
-    print("foo 1")
+    #print("_c_host_callback called with opcode " + str(opcode) + " index = " + str(index) + " value: ")
+
     if opcode == AudioMasterOpcodes.audioMasterGetTime:
         return _c_host_callback_for_gettimeinfo(effect, opcode, index, value, ptr, opt)
 
     cdef long long plugin_instance_identity = <long long> effect
     cdef VstIntPtr result
-    print("foo 2")
-    print("_c_host_callback.1")
     (return_code, data_to_write) = _python_host_callback(plugin_instance_identity, opcode, index, value,
                                                          <long long> ptr, opt)
-    print("_c_host_callback.2" + str(type(return_code)))
-    pprint(return_code)
     result = return_code
-    print("_c_host_callback.21")
     if data_to_write is not None:
         if isinstance(data_to_write, bytes):
             memcpy(ptr, <void*> data_to_write, len(data_to_write))
         else:
             raise Exception("this type of return value is not supported here (error: 93828ccb)")
-    print("_c_host_callback.22")
-
-    print("returning result " + str(result))
-    # print("result from python " + str(result_from_python))
     return result
 
 cdef VstIntPtr _c_host_callback_for_gettimeinfo(AEffect*effect, VstInt32 opcode, VstInt32 index, VstIntPtr value,
@@ -618,9 +604,7 @@ cdef AEffect *_load_vst(char *path_to_so) except? <AEffect*> 0:
                 b"null pointer when obtaining an address of the entry function. Error code = " + str(error_code))
 
         cdef AEffect *plugin_ptr = entry_function(_c_host_callback)
-        #plugin_ptr.dispatcher(plugin_ptr, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
-        print("plugin_ptr " + str(<long long> plugin_ptr))
-
+        plugin_ptr.dispatcher(plugin_ptr, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
         return plugin_ptr
 
 cdef _suspend_plugin(AEffect *plugin):
