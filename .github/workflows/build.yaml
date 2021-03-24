@@ -87,7 +87,7 @@ jobs:
            echo "cached image is already here"
         fi
     - name: load image from saved file
-      run: docker load build/manylinux_image
+      run: docker load -i build/manylinux_image
     - name: build itself
       run: bash build_scripts/build_on_host.sh
     - name: inspect dist
