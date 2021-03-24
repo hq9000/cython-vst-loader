@@ -26,7 +26,7 @@ python setup.py build_ext --inplace
 python setup.py bdist_wheel
 
 
-print "running unit tests"
+echo "=============== running unit tests ======================"
 python -m pytest
 
 
