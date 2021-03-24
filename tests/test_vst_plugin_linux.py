@@ -16,7 +16,7 @@ from cython_vst_loader.vst_plugin import VstPlugin
                  'this test case is supposed to be run on linux only, and this platform is ' + str(platform))
 class TestInLinux(unittest.TestCase):
 
-    def test_with_amsynth_general():
+    def test_with_amsynth_general(self):
         host = VstHost(44100, 512)
 
         this_dir: str = os.path.dirname(os.path.realpath(__file__))
@@ -79,7 +79,8 @@ class TestInLinux(unittest.TestCase):
 
         assert (faced_non_zero is True)
 
-        # since we have shut the note up almost immediately, in the end of the buffer (let's say the 81-82th samples) should be 0 again
+        # since we have shut the note up almost immediately, in the end of the buffer
+        # (let's say the 81-82th samples) should be 0 again
         assert (0.0 == right_output_as_list[81])
         assert (0.0 == left_output_as_list[82])
 
@@ -90,7 +91,7 @@ class TestInLinux(unittest.TestCase):
         free_buffer(right_output)
         free_buffer(left_output)
 
-    def test_amsynth_many_events_to_process():
+    def test_amsynth_many_events_to_process(self):
         host = VstHost(44100, 512)
 
         this_dir: str = os.path.dirname(os.path.realpath(__file__))
@@ -121,7 +122,7 @@ class TestInLinux(unittest.TestCase):
             free_buffer(right_output)
             free_buffer(left_output)
 
-    def test_amsynth_limitation_on_num_events():
+    def test_amsynth_limitation_on_num_events(self):
         host = VstHost(44100, 512)
 
         this_dir: str = os.path.dirname(os.path.realpath(__file__))
@@ -135,7 +136,7 @@ class TestInLinux(unittest.TestCase):
         except ValueError as e:
             assert (str(e).endswith('(error: edaa3dff)'))
 
-    def test_with_dragonfly_reverb():
+    def test_with_dragonfly_reverb(self):
         buffer_length: int = 1024
 
         host = VstHost(44100, buffer_length)
