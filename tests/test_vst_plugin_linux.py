@@ -12,7 +12,7 @@ from cython_vst_loader.vst_host import VstHost
 from cython_vst_loader.vst_plugin import VstPlugin
 
 
-@unittest.skipIf(platform != 'Linux',
+@unittest.skipIf(platform != 'linux',
                  'this test case is supposed to be run on linux only, and this platform is ' + str(platform))
 class TestInLinux(unittest.TestCase):
 
