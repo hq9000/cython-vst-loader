@@ -28,10 +28,6 @@ python setup.py bdist_wheel
 echo "=============== inspecting platform value ======================"
 python inspect_platform.py
 
-echo "=============== running unit tests ======================"
-python -m pytest
-
-
 mkdir -p /cython-vst-loader/dist/manylinux
 ls -la /cython-vst-loader/dist
 auditwheel repair --plat manylinux1_x86_64 --wheel-dir /cython-vst-loader/dist/manylinux /cython-vst-loader/dist/*.whl
