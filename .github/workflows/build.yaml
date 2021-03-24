@@ -78,9 +78,14 @@ jobs:
       with:
         path: build/manylinux_image
         key: manylinux-image-cache
-    - name: conditionally pull the image
+    - name: conditionally pull and save the image
       run: |
-        [ -f build/manylinux_image ] && docker pull quay.io/pypa/manylinux2010_x86_64:latest && docker save quay.io/pypa/manylinux2010_x86_64:latest > build/manylinux_image
+        if [ ! -f build/manylinux_image ]; then \
+           docker pull quay.io/pypa/manylinux2010_x86_64:latest && \
+           docker save quay.io/pypa/manylinux2010_x86_64:latest > build/manylinux_image \
+        else \
+           echo "cached image is already here" \
+        fi
     - name: load image from saved file
       run: docker load build/manylinux_image
     - name: build itself
