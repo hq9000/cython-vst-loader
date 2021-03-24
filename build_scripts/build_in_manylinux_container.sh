@@ -25,6 +25,8 @@ pip install wheel
 python setup.py build_ext --inplace
 python setup.py bdist_wheel
 
+echo "=============== inspecting platform value ======================"
+python inspect_platform.py
 
 echo "=============== running unit tests ======================"
 python -m pytest
