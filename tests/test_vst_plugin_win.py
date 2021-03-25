@@ -71,14 +71,15 @@ class TestPluginsWinTestCase(unittest.TestCase):
         free_buffer(right_output)
         free_buffer(left_output)
 
-
-
     @parameterized.expand([
-        ('TyrellN6(x64).dll', False, 512, 92),
-        ('TyrellN6(x64).dll', False, 256, 92),
+        ('TAL-Elek7ro-II.dll', False, 512, 107),
+        ('TAL-Elek7ro-II.dll', False, 256, 107),
+        ('TAL-Elek7ro-II.dll', False, 1024, 107),
         ('OB-Xd.dll', False, 512, 80),
         ('OB-Xd.dll', False, 1024, 80),
         ('OB-Xd.dll', False, 256, 80),
+        # ('TyrellN6(x64).dll', False, 512, 92), #???
+        # ('TyrellN6(x64).dll', False, 256, 92),
         # ('OB-Xd.dll', True), - OB-Xd seems to not allow double precision
         # ('Tunefish4.dll', True), - weirdly, TuneFish2 also disallows double precision processing
         ('Tunefish4.dll', False, 512, 112),
@@ -125,22 +126,27 @@ class TestPluginsWinTestCase(unittest.TestCase):
         free_buffer(right_input)
         free_buffer(left_input)
 
-    def test_with_dragonfly_reverb(self):
+    @parameterized.expand([
+        ('DragonflyPlateReverb-vst.dll', 9),
+        ('TAL-Reverb-2-64.dll', 13),
+    ])
+    def test_with_dragonfly_reverb(self, relative_plugin_path: str, expected_number_of_parameters: int):
         buffer_length: int = 1024
 
         host = VstHost(44100, buffer_length)
 
         this_dir: str = os.path.dirname(os.path.realpath(__file__))
-        plugin_path: str = this_dir + "/test_plugins/DragonflyPlateReverb-vst.dll"
+
+        plugin_path: str = this_dir + "/test_plugins/" + relative_plugin_path
 
         plugin = VstPlugin(plugin_path.encode('utf-8'), host)
 
         assert (plugin.is_synth() is False)
         assert (plugin.allows_double_precision() is False)
-        assert (9 == plugin.get_num_parameters())
+        assert (expected_number_of_parameters == plugin.get_num_parameters())
         assert (2 == plugin.get_num_input_channels())
         assert (2 == plugin.get_num_output_channels())
-        assert (b'Dry Level' == plugin.get_parameter_name(0))
+
         plugin.set_parameter_value(0, 0.123123)
         assert (0.123 < plugin.get_parameter_value(0) < 0.124)
 
@@ -151,8 +157,3 @@ class TestPluginsWinTestCase(unittest.TestCase):
         right_output = allocate_float_buffer(buffer_length, 0)
 
         plugin.process_replacing([left_input, right_input], [left_output, right_output], buffer_length)
-
-        left_output_as_list = get_float_buffer_as_list(left_output, buffer_length)
-
-        # this is roughly input level 1 multiplied by dry level (0.123)
-        assert (0.123 < left_output_as_list[2] < 0.124)
