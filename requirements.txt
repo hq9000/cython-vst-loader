@@ -11,3 +11,4 @@ six==1.15.0
 wcwidth==0.1.9
 zipp==3.1.0
 parameterized==0.8.1
+flake8==3.9.0

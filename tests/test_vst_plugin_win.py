@@ -1,6 +1,5 @@
 import os
 import unittest
-from time import sleep
 
 from cython_vst_loader.vst_event import VstNoteOnMidiEvent
 from cython_vst_loader.vst_host import VstHost
