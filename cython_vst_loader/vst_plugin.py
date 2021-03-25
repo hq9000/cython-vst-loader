@@ -48,7 +48,7 @@ class VstPlugin:
 
         VstPlugin._temporary_context_host = None
 
-        # start_plugin(self._instance_pointer, host.get_sample_rate(), host.get_block_size())
+        start_plugin(self._instance_pointer, host.get_sample_rate(), host.get_block_size())
 
     @classmethod
     def _global_host_callback(cls, plugin_instance_pointer: int, opcode: int, index: int, value: float, ptr: int,
