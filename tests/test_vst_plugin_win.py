@@ -71,25 +71,29 @@ class TestPluginsWinTestCase(unittest.TestCase):
         free_buffer(right_output)
         free_buffer(left_output)
 
+
+
     @parameterized.expand([
-        ('OB-Xd.dll', False, 512),
-        ('OB-Xd.dll', False, 1024),
-        ('OB-Xd.dll', False, 256),
+        ('TyrellN6(x64).dll', False, 512, 92),
+        ('TyrellN6(x64).dll', False, 256, 92),
+        ('OB-Xd.dll', False, 512, 80),
+        ('OB-Xd.dll', False, 1024, 80),
+        ('OB-Xd.dll', False, 256, 80),
         # ('OB-Xd.dll', True), - OB-Xd seems to not allow double precision
         # ('Tunefish4.dll', True), - weirdly, TuneFish2 also disallows double precision processing
-        ('Tunefish4.dll', False, 512),
-        ('Tunefish4.dll', False, 1024),
-        ('Tunefish4.dll', False, 256)
+        ('Tunefish4.dll', False, 512, 112),
+        ('Tunefish4.dll', False, 1024, 112),
+        ('Tunefish4.dll', False, 256, 112)
     ])
     def test_synth_many_events_to_process(self, relative_path_to_synth_plugin: str, double_processing: bool,
-                                          buffer_size: int):
+                                          buffer_size: int, expected_num_parameters):
         host = VstHost(44100, 512)
 
         this_dir: str = os.path.dirname(os.path.realpath(__file__))
         plugin_path: str = this_dir + '/test_plugins/' + relative_path_to_synth_plugin
         plugin = VstPlugin(plugin_path.encode('utf-8'), host)
 
-        print(plugin.allows_double_precision())
+        self.assertEqual(plugin.get_num_parameters(), expected_num_parameters)
 
         event_nums = [0, 0, 3, 0, 15, 16, 16, 16, 16, 17, 32, 512, 1023, 1021]
 
