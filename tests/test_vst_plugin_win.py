@@ -77,10 +77,8 @@ class TestPluginsWinTestCase(unittest.TestCase):
         ('OB-Xd.dll', False, 512, 80),
         ('OB-Xd.dll', False, 1024, 80),
         ('OB-Xd.dll', False, 256, 80),
-        # ('TyrellN6(x64).dll', False, 512, 92), #???
-        # ('TyrellN6(x64).dll', False, 256, 92),
-        # ('OB-Xd.dll', True), - OB-Xd seems to not allow double precision
-        # ('Tunefish4.dll', True), - weirdly, TuneFish2 also disallows double precision processing
+        ('TAL-NoiseMaker-64.dll', False, 256, 92),
+        ('TAL-NoiseMaker-64.dll', False, 1024, 92),
         ('Tunefish4.dll', False, 512, 112),
         ('Tunefish4.dll', False, 1024, 112),
         ('Tunefish4.dll', False, 256, 112)
@@ -93,7 +91,7 @@ class TestPluginsWinTestCase(unittest.TestCase):
         plugin_path: str = this_dir + '/test_plugins/' + relative_path_to_synth_plugin
         plugin = VstPlugin(plugin_path.encode('utf-8'), host)
 
-        self.assertEqual(plugin.get_num_parameters(), expected_num_parameters)
+        self.assertEqual(expected_num_parameters, plugin.get_num_parameters())
 
         event_nums = [0, 0, 3, 0, 15, 16, 16, 16, 16, 17, 32, 512, 1023, 1021]
 
