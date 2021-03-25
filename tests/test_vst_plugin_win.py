@@ -7,6 +7,7 @@ from cython_vst_loader.vst_host import VstHost
 from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer, get_float_buffer_as_list, free_buffer, \
     allocate_double_buffer
 from cython_vst_loader.vst_plugin import VstPlugin
+from parameterized import parameterized
 
 
 @unittest.skipIf(os.name != 'nt', 'this test case is supposed to be run on windows')
@@ -70,26 +71,38 @@ class TestPluginsWinTestCase(unittest.TestCase):
         free_buffer(right_output)
         free_buffer(left_output)
 
-    def test_obxd_many_events_to_process(self):
+    @parameterized.expand([
+        ('OB-Xd.dll', False, 512),
+        ('OB-Xd.dll', False, 1024),
+        ('OB-Xd.dll', False, 256),
+        # ('OB-Xd.dll', True), - OB-Xd seems to not allow double precision
+        # ('Tunefish4.dll', True), - weirdly, TuneFish2 also disallows double precision processing
+        ('Tunefish4.dll', False, 512),
+        ('Tunefish4.dll', False, 1024),
+        ('Tunefish4.dll', False, 256)
+    ])
+    def test_synth_many_events_to_process(self, relative_path_to_synth_plugin: str, double_processing: bool,
+                                          buffer_size: int):
         host = VstHost(44100, 512)
 
         this_dir: str = os.path.dirname(os.path.realpath(__file__))
-        plugin_path: str = this_dir + "/test_plugins/OB-Xd.dll"
-        # plugin_path: str = this_dir + "/test_plugins/non_distributable/TyrellN6(x64).dll"
-        # plugin_path: str = this_dir + "/test_plugins/non_distributable/helm64.dll"
-        # plugin_path: str = this_dir + "/test_plugins/non_distributable/Surge/Surge.dll"
-        # plugin_path: str = this_dir + "/test_plugins/non_distributable/Tunefish4.dll"
-        # plugin_path: str = this_dir + "/test_plugins/non_distributabable/Dexed/Tunefish4.dll"
-
+        plugin_path: str = this_dir + '/test_plugins/' + relative_path_to_synth_plugin
         plugin = VstPlugin(plugin_path.encode('utf-8'), host)
+
+        print(plugin.allows_double_precision())
 
         event_nums = [0, 0, 3, 0, 15, 16, 16, 16, 16, 17, 32, 512, 1023, 1021]
 
-        right_input = allocate_float_buffer(513, 1)
-        left_input = allocate_float_buffer(513, 1)
-
-        right_output = allocate_float_buffer(513, 1)
-        left_output = allocate_float_buffer(513, 1)
+        if double_processing:
+            right_input = allocate_double_buffer(buffer_size, 1)
+            left_input = allocate_double_buffer(buffer_size, 1)
+            right_output = allocate_double_buffer(buffer_size, 1)
+            left_output = allocate_double_buffer(buffer_size, 1)
+        else:
+            right_input = allocate_float_buffer(buffer_size, 1)
+            left_input = allocate_float_buffer(buffer_size, 1)
+            right_output = allocate_float_buffer(buffer_size, 1)
+            left_output = allocate_float_buffer(buffer_size, 1)
 
         for i in range(60):
             for num in event_nums:
@@ -98,7 +111,44 @@ class TestPluginsWinTestCase(unittest.TestCase):
                     events.append(VstNoteOnMidiEvent(3 + num, 85, 100, 1))
 
                 plugin.process_events(events)
-                plugin.process_replacing([right_input, left_input], [right_output, left_output], 512)
+                if double_processing:
+                    plugin.process_double_replacing([right_input, left_input], [right_output, left_output], buffer_size)
+                else:
+                    plugin.process_replacing([right_input, left_input], [right_output, left_output], buffer_size)
 
         free_buffer(right_output)
         free_buffer(left_output)
+        free_buffer(right_input)
+        free_buffer(left_input)
+
+    def test_with_dragonfly_reverb(self):
+        buffer_length: int = 1024
+
+        host = VstHost(44100, buffer_length)
+
+        this_dir: str = os.path.dirname(os.path.realpath(__file__))
+        plugin_path: str = this_dir + "/test_plugins/DragonflyPlateReverb-vst.dll"
+
+        plugin = VstPlugin(plugin_path.encode('utf-8'), host)
+
+        assert (plugin.is_synth() is False)
+        assert (plugin.allows_double_precision() is False)
+        assert (9 == plugin.get_num_parameters())
+        assert (2 == plugin.get_num_input_channels())
+        assert (2 == plugin.get_num_output_channels())
+        assert (b'Dry Level' == plugin.get_parameter_name(0))
+        plugin.set_parameter_value(0, 0.123123)
+        assert (0.123 < plugin.get_parameter_value(0) < 0.124)
+
+        left_input = allocate_float_buffer(buffer_length, 1)
+        right_input = allocate_float_buffer(buffer_length, 1)
+
+        left_output = allocate_float_buffer(buffer_length, 0)
+        right_output = allocate_float_buffer(buffer_length, 0)
+
+        plugin.process_replacing([left_input, right_input], [left_output, right_output], buffer_length)
+
+        left_output_as_list = get_float_buffer_as_list(left_output, buffer_length)
+
+        # this is roughly input level 1 multiplied by dry level (0.123)
+        assert (0.123 < left_output_as_list[2] < 0.124)

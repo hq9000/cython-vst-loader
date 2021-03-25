@@ -41,6 +41,7 @@ class VstPlugin:
         self._instance_pointer: int = create_plugin(path_to_shared_library)
 
         self._plugin_host_map[self._instance_pointer] = host
+        self._allows_double_precision_cached_value: Optional[bool] = None
 
         if self._instance_pointer not in self._plugin_host_map:
             raise Exception("host instance not found for plugin with identity " + str(self._instance_pointer))
@@ -57,7 +58,8 @@ class VstPlugin:
             host = cls._temporary_context_host
         else:
             if plugin_instance_pointer not in cls._plugin_host_map:
-                raise CythonVstLoaderException('plugin identity ' + str(plugin_instance_pointer) + ' not found in host map')
+                raise CythonVstLoaderException(
+                    'plugin identity ' + str(plugin_instance_pointer) + ' not found in host map')
 
             host = cls._plugin_host_map[plugin_instance_pointer]
             if host is None:
@@ -97,10 +99,14 @@ class VstPlugin:
             process_events_1024(self._instance_pointer, events)
 
     def process_replacing(self, input_channel_pointers: List[int], output_channel_pointers: List[int], block_size: int):
+
         process_replacing(self._instance_pointer, input_channel_pointers, output_channel_pointers, block_size)
 
     def process_double_replacing(self, input_channel_pointers: List[int], output_channel_pointers: List[int],
                                  block_size: int):
+        if not self.allows_double_precision():
+            raise CythonVstLoaderException('this plugin does not support double precision')
+
         process_double_replacing(self._instance_pointer, input_channel_pointers, output_channel_pointers, block_size)
 
     def _validate_parameter_index(self, index: int):
@@ -114,4 +120,7 @@ class VstPlugin:
         return get_parameter_name(self._instance_pointer, param_index)
 
     def allows_double_precision(self) -> bool:
-        return bool(get_flags(self._instance_pointer) & VstAEffectFlags.effFlagsCanDoubleReplacing)
+        if self._allows_double_precision_cached_value is None:
+            self._allows_double_precision_cached_value = bool(
+                get_flags(self._instance_pointer) & VstAEffectFlags.effFlagsCanDoubleReplacing)
+        return self._allows_double_precision_cached_value
