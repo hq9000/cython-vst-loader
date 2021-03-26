@@ -177,8 +177,14 @@ jobs:
     - name: Inspecting dist after downloading artifacts
       run: |
         tree --du dist/
-    - name: Publish distribution to Test PyPI
-      uses: pypa/gh-action-pypi-publish@master
-      with:
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        repository_url: https://test.pypi.org/legacy/
+    - name: Getting publishing target from 'publishing_target.txt', should be [none|test|main]
+      id: publishing_target
+      run: cat publishing_target.txt
+    - name: inspecting publishing target
+      run: echo ${{ join(steps.publishing_target.outputs.*), '\n' }}
+
+#    - name: Publish distribution to Test PyPI
+#      uses: pypa/gh-action-pypi-publish@master
+#      with:
+#        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+#        repository_url: https://test.pypi.org/legacy/
