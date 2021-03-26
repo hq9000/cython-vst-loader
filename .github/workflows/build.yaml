@@ -178,10 +178,10 @@ jobs:
       run: |
         tree --du dist/
     - name: Getting publishing target from 'publishing_target.txt', should be [none|test|main]
-      id: publishing_target
-      run: cat publishing_target.txt
-    - name: inspecting publishing target
-      run: echo ${{ join(steps.publishing_target.outputs.*, '\n') }}
+      id: get_publishing_target
+      run: echo "::set-output name=publishing_target::$(cat publishing_target.txt)"
+    - name: inspecting publishing target from the previous step output
+      run: echo ${{ steps.get_publishing_target.outputs.publishing_target }}
 
 #    - name: Publish distribution to Test PyPI
 #      uses: pypa/gh-action-pypi-publish@master
