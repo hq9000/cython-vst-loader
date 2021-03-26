@@ -181,7 +181,7 @@ jobs:
       id: publishing_target
       run: cat publishing_target.txt
     - name: inspecting publishing target
-      run: echo ${{ join(steps.publishing_target.outputs.*), '\n' }}
+      run: echo ${{ join(steps.publishing_target.outputs.*, '\n') }}
 
 #    - name: Publish distribution to Test PyPI
 #      uses: pypa/gh-action-pypi-publish@master
