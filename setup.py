@@ -58,7 +58,12 @@ setuptools.setup(
     ext_modules=ext_modules,
     name='cython_vst_loader',
     packages=['cython_vst_loader'],
-    version=version,
+    use_scm_version={
+        "root": ".",
+        "relative_to": __file__,
+        "local_scheme": "node-and-timestamp"
+    },
+    setup_requires=['setuptools_scm'],
     license='MIT',
     description='a cython-based loader for VST audio plugins providing a clean python object-oriented interface',
     long_description=long_description,
@@ -67,6 +72,7 @@ setuptools.setup(
     author_email='grechin.sergey@gmail.com',
     url='https://github.com/hq9000/cython-vst-loader',
     keywords=['vst', 'plugin', 'cython'],
+
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
@@ -74,6 +80,6 @@ setuptools.setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.9'
     ],
 )
