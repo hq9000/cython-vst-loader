@@ -177,11 +177,17 @@ jobs:
     - name: Inspecting dist after downloading artifacts
       run: |
         tree --du dist/
+
     - name: Getting publishing target from 'publishing_target.txt', should be [none|test|main]
       id: get_publishing_target
       run: echo "::set-output name=publishing_target::$(cat publishing_target.txt)"
+
     - name: inspecting publishing target from the previous step output
       run: echo ${{ steps.get_publishing_target.outputs.publishing_target }}
+
+    - name: inspecting github.ref
+      run: echo ${{ github.ref }}
+
     - name: Publish distribution to Test PyPI
       if: ${{  steps.get_publishing_target.outputs.publishing_target == 'test' }}
       uses: pypa/gh-action-pypi-publish@master
