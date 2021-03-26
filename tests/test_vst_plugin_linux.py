@@ -4,9 +4,7 @@ import os
 import unittest
 from sys import platform
 
-from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer, get_float_buffer_as_list, free_buffer, \
-    allocate_double_buffer, get_double_buffer_as_list
-
+from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer, get_float_buffer_as_list, free_buffer
 from cython_vst_loader.vst_event import VstNoteOnMidiEvent
 from cython_vst_loader.vst_host import VstHost
 from cython_vst_loader.vst_plugin import VstPlugin

@@ -319,7 +319,7 @@ def start_plugin(long long plugin_instance_pointer, int sample_rate, int block_s
     cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effOpen, 0, 0, NULL, 0.0)
     cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effSetSampleRate, 0, 0, NULL, sample_rate)
     cast_plugin_pointer.dispatcher(cast_plugin_pointer, AEffectOpcodes.effSetBlockSize, 0, block_size, NULL, 0.0)
-    _resume_plugin(cast_plugin_pointer)
+    #_resume_plugin(cast_plugin_pointer)
 
 def get_num_parameters(long long plugin_pointer) -> int:
     cdef AEffect *cast_plugin_pointer = <AEffect*> plugin_pointer

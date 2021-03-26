@@ -38,7 +38,7 @@ class VstHost:
     # noinspection PyUnusedLocal
     def host_callback(self, plugin_instance_pointer: int, opcode: int, index: int, value: float, ptr: int, opt: float):
 
-        #print('python called host_callback with plugin instance ' + str(plugin_instance_pointer) + ' opcode: ' + str(
+        # print('python called host_callback with plugin instance ' + str(plugin_instance_pointer) + ' opcode: ' + str(
         #    opcode) + " value: " + str(value))
 
         res = None
@@ -65,7 +65,7 @@ class VstHost:
         elif opcode == AudioMasterOpcodes.audioMasterSizeWindow:
             res = (0, None)
         else:
-            raise CythonVstLoaderException(f"plugin-to-host opcode {str(opcode)} is not supported");
+            raise CythonVstLoaderException(f"plugin-to-host opcode {str(opcode)} is not supported")
 
         return res
 
