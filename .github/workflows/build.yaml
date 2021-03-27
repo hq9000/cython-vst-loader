@@ -1,11 +1,10 @@
 name: build-test-release-test
 
 on:
-  pull_request:
   push:
-#    tags:
-#      - 'v*'
-#      - 'pre*'
+    branches:
+      - master
+  pull_request:
 
 defaults:
   run:
@@ -189,12 +188,11 @@ jobs:
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
 
-    - name: Publish distribution to PyPI if tag does not contain "dev"
+    - name: Publish distribution to real PyPI if tag does not contain "dev"
       if: ${{ ! contains(github.ref, 'dev') }}
       uses: pypa/gh-action-pypi-publish@master
       with:
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        repository_url: https://test.pypi.org/legacy/
+        password: ${{ secrets.PYPI_API_TOKEN }}
 
     - name: sleep for 120s to allow subsequent jobs to fetch packages from pypi
       run: sleep 120
