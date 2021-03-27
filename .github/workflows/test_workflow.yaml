@@ -27,7 +27,7 @@ jobs:
         run: echo ${{ github.ref }}
 
       - name: extracting tag
-        run: echo "::set-output name=version::$(echo ${{ github.ref }} | awk -F \"/\" '{print $3}')"
+        run: echo "::set-output name=version::$(echo ${{ github.ref }} | awk -F "/" '{print $3}')"
         id: extract_version
 
       - name: inspecting output
