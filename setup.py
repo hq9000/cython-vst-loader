@@ -57,7 +57,7 @@ with open(str(this_directory) + '/version.txt', encoding='utf-8') as f:
 setuptools.setup(
     ext_modules=ext_modules,
     name='cython_vst_loader',
-    packages=['cython_vst_loader'],
+    packages=setuptools.find_packages(exclude=("tests",)),
     use_scm_version={
         "root": ".",
         "relative_to": __file__,
@@ -72,7 +72,6 @@ setuptools.setup(
     author_email='grechin.sergey@gmail.com',
     url='https://github.com/hq9000/cython-vst-loader',
     keywords=['vst', 'plugin', 'cython'],
-
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
