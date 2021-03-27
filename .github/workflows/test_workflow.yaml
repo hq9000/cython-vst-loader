@@ -9,10 +9,11 @@ defaults:
 
 jobs:
   test_installing_from_pypi:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         python_version: [3.7, 3.8, 3.9]
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - name: hello world
         run: echo "hello-world ${{ matrix.python_version }}"
