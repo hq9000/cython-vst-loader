@@ -188,6 +188,8 @@ jobs:
       with:
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
+    - name: sleep for 60s to allow subsequent jobs to fetch packages from pypi
+      run: sleep 60
 
   test_installing_from_pypi:
     needs: [ release ]
@@ -210,9 +212,24 @@ jobs:
         id: extract_version
       - name: inspecting output
         run: echo ${{ steps.extract_version.outputs.version }}
-      - name: sleeping for 30s
-        run: sleep 30
       - name: installing package from test pypi
         if: ${{ contains(github.ref, 'dev') }}
         run: pip install --index-url https://test.pypi.org/simple/ 'cython-vst-loader==${{ steps.extract_version.outputs.version }}'
+      - name: preparing test script
+        run: |
+          echo "from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer, get_float_buffer_as_list, free_buffer, allocate_double_buffer, get_double_buffer_as_list" >> test.py
+          echo "from cython_vst_loader.exceptions import CythonVstLoaderException" >> test.py
+          echo "from cython_vst_loader.vst_constants import VstAEffectFlags" >> test.py
+          echo "from cython_vst_loader.vst_event import VstEvent" >> test.py
+          echo "from cython_vst_loader.vst_host import VstHost" >> test.py
+          echo "pointer = allocate_float_buffer(10, 12.345)" >> test.py
+          echo "print(str(pointer))" >> test.py
+          echo "free_buffer(pointer)" >> test.py
+          echo "host=VstHost(44100,512)" >> test.py
+          echo "print('all good')" >> test.py
 
+      - name: inspecting test script
+        run: cat test.py
+
+      - name: running test script
+        run: python test.py

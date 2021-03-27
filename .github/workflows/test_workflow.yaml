@@ -50,7 +50,6 @@ jobs:
           echo "host=VstHost(44100,512)" >> test.py
           echo "print('all good')" >> test.py
 
-
       - name: inspecting test script
         run: cat test.py
 
