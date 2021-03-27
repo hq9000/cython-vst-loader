@@ -29,7 +29,7 @@ Note: only 64-bit/VST2 plugins are currently supported.
 
 ### Plugins tested on Windows
 
-#### Synths
+### Synths
 - TAL NoiseMaker (https://tal-software.com/products/tal-noisemaker)
 - TAL Elec7ro (https://tal-software.com/products/tal-elek7ro)
 - DiscoDSP OB-Xd (https://www.discodsp.com/obxd/)
@@ -41,7 +41,7 @@ Note: only 64-bit/VST2 plugins are currently supported.
 
 ### Plugins tested on Linux
 
-#### Synths
+### Synths
 - amsynth (http://amsynth.github.io/)
 
 ### Effects

@@ -51,9 +51,6 @@ for module in ext_modules:
 with open(str(this_directory) + '/README.md', encoding='utf-8') as f:
     long_description = f.read()
 
-with open(str(this_directory) + '/version.txt', encoding='utf-8') as f:
-    version = f.read()
-
 setuptools.setup(
     ext_modules=ext_modules,
     name='cython_vst_loader',
