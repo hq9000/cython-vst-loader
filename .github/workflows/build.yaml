@@ -188,8 +188,16 @@ jobs:
       with:
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
-    - name: sleep for 60s to allow subsequent jobs to fetch packages from pypi
-      run: sleep 60
+
+    - name: Publish distribution to PyPI if tag does not contain "dev"
+      if: ${{ ! contains(github.ref, 'dev') }}
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
+
+    - name: sleep for 120s to allow subsequent jobs to fetch packages from pypi
+      run: sleep 120
 
   test_installing_from_pypi:
     needs: [ release ]
@@ -212,9 +220,12 @@ jobs:
         id: extract_version
       - name: inspecting output
         run: echo ${{ steps.extract_version.outputs.version }}
-      - name: installing package from test pypi
+      - name: installing package from test pypi (if tag is "dev")
         if: ${{ contains(github.ref, 'dev') }}
         run: pip install --index-url https://test.pypi.org/simple/ 'cython-vst-loader==${{ steps.extract_version.outputs.version }}'
+      - name: installing package from production pypi (if tag is not "dev")
+        if: ${{ ! contains(github.ref, 'dev') }}
+        run: pip install 'cython-vst-loader==${{ steps.extract_version.outputs.version }}'
       - name: preparing test script
         run: |
           echo "from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer, get_float_buffer_as_list, free_buffer, allocate_double_buffer, get_double_buffer_as_list" >> test.py
