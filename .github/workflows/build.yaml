@@ -194,8 +194,8 @@ jobs:
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
 
-    - name: sleep for 120s to allow subsequent jobs to fetch packages from pypi
-      run: sleep 120
+    - name: sleep for 130s to allow subsequent jobs to fetch packages from pypi
+      run: sleep 130
 
   test_installing_from_pypi:
     needs: [ release ]
