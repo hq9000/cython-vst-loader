@@ -16,4 +16,10 @@ jobs:
         os: [ ubuntu-latest, windows-latest ]
     steps:
       - name: hello world
-        run: echo "hello-world ${{ matrix.python_version }}"
+        run: echo "hello-world ${{ matrix.python-version }}"
+      - name: Set up
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pip
+        run: python -m pip install --upgrade pip
