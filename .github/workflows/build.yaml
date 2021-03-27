@@ -201,6 +201,6 @@ jobs:
         python_version: [3.7, 3.8, 3.9]
     runs-on: ${{ matrix.os }}
     steps:
-      hello_world:
-        run: echo "hello-world"
+    - name: hello world
+      run: echo "hello-world"
 
