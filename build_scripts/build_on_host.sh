@@ -14,9 +14,18 @@ set -e
 SCRIPT_DIR=$(dirname "$0")
 PROJECT_DIR="${SCRIPT_DIR}/../"
 
-rm -rf ${PROJECT_DIR}/dist/*
+IMAGE=quay.io/pypa/manylinux2010_x86_64:latest
 
-docker run --rm -it -v ~/em/cython-vst-loader:/cython-vst-loader quay.io/pypa/manylinux2010_x86_64:latest bash /cython-vst-loader/build_scripts/build_in_manylinux_container.sh cp37-cp37m
-docker run --rm -it -v ~/em/cython-vst-loader:/cython-vst-loader quay.io/pypa/manylinux2010_x86_64:latest bash /cython-vst-loader/build_scripts/build_in_manylinux_container.sh cp38-cp38
-docker run --rm -it -v ~/em/cython-vst-loader:/cython-vst-loader quay.io/pypa/manylinux2010_x86_64:latest bash /cython-vst-loader/build_scripts/build_in_manylinux_container.sh cp39-cp39
+echo "about to build for 3.9 manylinux"
+docker run --rm -t -v `pwd`:/cython-vst-loader $IMAGE  bash /cython-vst-loader/build_scripts/build_in_manylinux_container.sh cp39-cp39
+echo "done building for 3.9 manylinux"
+
+echo "about to build for 3.7 manylinux"
+docker run --rm -t -v `pwd`:/cython-vst-loader $IMAGE bash /cython-vst-loader/build_scripts/build_in_manylinux_container.sh cp37-cp37m
+echo "done building for 3.7 manylinux"
+
+
+echo "about to build for 3.8 manylinux"
+docker run --rm -t -v `pwd`:/cython-vst-loader $IMAGE bash /cython-vst-loader/build_scripts/build_in_manylinux_container.sh cp38-cp38
+echo "done building for 3.8 manylinux"
 

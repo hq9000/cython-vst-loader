@@ -1,0 +1,244 @@
+name: build-test-release-test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test_and_build_on_windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Display python version
+      run: python --version
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install flake8
+        pip install -r requirements.txt
+    - name: Cache VSTSDK
+      id: vst-sdk-cache
+      uses: actions/cache@v2
+      with:
+        path: build/vstsdk
+        key: uncompressed_vstsdk_cache
+        restore-keys: |
+          uncompressed_vstsdk_cache
+    - name: Build Cython module
+      run: |
+        python setup.py build_ext --inplace
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with pytest
+      run: |
+        python -m pytest
+    - name: build dist
+      run: |
+        python setup.py bdist_wheel
+    - name: Inspecting dist contents
+      run: |
+        ls -la dist/
+    - name: upload whl as an artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: whl_win_${{ matrix.python-version }}
+        path: dist/*.whl
+
+  test_on_linux:
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        python-version: [ 3.7, 3.8, 3.9 ]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Cache VSTSDK
+      id: vst-sdk-cache
+      uses: actions/cache@v2
+      with:
+        path: build/vstsdk
+        key: uncompressed_vstsdk_cache
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install flake8
+        pip install -r requirements.txt
+    - name: Build Cython module
+      run: |
+        python setup.py build_ext --inplace
+    - name: Inspecting python platform
+      run: python inspect_platform.py
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with pytest
+      run: |
+        python -m pytest
+
+  build_on_linux:
+    runs-on: ubuntu-latest
+    needs: [ test_on_linux ]
+    steps:
+    - uses: actions/checkout@v2
+    - name: pwd
+      run: pwd
+    - name: Cache VSTSDK archive
+      id: vst-sdk-archive-cache
+      uses: actions/cache@v2
+      with:
+        path: build/vstsdk.zip
+        key: vstsdk_cache
+    - name: Cache VSTSDK
+      id: vst-sdk-cache
+      uses: actions/cache@v2
+      with:
+        path: build/vstsdk
+        key: uncompressed_vstsdk_cache
+    - name: Cache minylinux image
+      id: manylinux-image-cache
+      uses: actions/cache@v2
+      with:
+        path: build/manylinux_image
+        key: manylinux-image-cache
+    - name: conditionally pull and save the image
+      run: |
+        if [ ! -f build/manylinux_image ]; then
+           docker pull quay.io/pypa/manylinux2010_x86_64:latest &&
+           docker save quay.io/pypa/manylinux2010_x86_64:latest > build/manylinux_image
+        else
+           echo "cached image is already here"
+        fi
+    - name: load image from saved file
+      run: docker load -i build/manylinux_image
+    - name: build itself
+      run: bash build_scripts/build_on_host.sh
+    - name: inspect dist
+      run: tree --du dist/
+    - name: upload whls as an artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: whl_manylinux
+        path: dist/manylinux
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [ test_and_build_on_windows, build_on_linux ]
+
+    # making a release only if this version is tagged
+    # https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions
+    if: ${{ contains(github.ref, 'refs/tags/') }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up python 3.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - uses: actions/download-artifact@v2
+      with:
+        name: whl_win_3.7
+        path: dist
+    - uses: actions/download-artifact@v2
+      with:
+        name: whl_win_3.8
+        path: dist
+    - uses: actions/download-artifact@v2
+      with:
+        name: whl_win_3.9
+        path: dist
+    - uses: actions/download-artifact@v2
+      with:
+        name: whl_manylinux
+        path: dist
+    - name: Inspecting dist after downloading artifacts
+      run: |
+        tree --du dist/
+
+    - name: Getting publishing target from 'publishing_target.txt', should be [none|test|main]
+      id: get_publishing_target
+      run: echo "::set-output name=publishing_target::$(cat publishing_target.txt)"
+
+    - name: Publish distribution to Test PyPI if tag contains "dev"
+      if: ${{ contains(github.ref, 'dev') }}
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
+
+    - name: Publish distribution to real PyPI if tag does not contain "dev"
+      if: ${{ ! contains(github.ref, 'dev') }}
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+
+    - name: sleep for 130s to allow subsequent jobs to fetch packages from pypi
+      run: sleep 130
+
+  test_installing_from_pypi:
+    needs: [ release ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+        os: [ ubuntu-latest, windows-latest]
+    steps:
+      - name: Set up python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pip
+        run: python -m pip install --upgrade pip
+      - name: inspect github.ref
+        run: echo ${{ github.ref }}
+      - name: extracting tag
+        run: echo "::set-output name=version::$(echo ${{ github.ref }} | awk -F "/" '{print $3}')"
+        id: extract_version
+      - name: inspecting output
+        run: echo ${{ steps.extract_version.outputs.version }}
+      - name: installing package from test pypi (if tag is "dev")
+        if: ${{ contains(github.ref, 'dev') }}
+        run: pip install --index-url https://test.pypi.org/simple/ 'cython-vst-loader==${{ steps.extract_version.outputs.version }}'
+      - name: installing package from production pypi (if tag is not "dev")
+        if: ${{ ! contains(github.ref, 'dev') }}
+        run: pip install 'cython-vst-loader==${{ steps.extract_version.outputs.version }}'
+      - name: preparing test script
+        run: |
+          echo "from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer, get_float_buffer_as_list, free_buffer, allocate_double_buffer, get_double_buffer_as_list" >> test.py
+          echo "from cython_vst_loader.exceptions import CythonVstLoaderException" >> test.py
+          echo "from cython_vst_loader.vst_constants import VstAEffectFlags" >> test.py
+          echo "from cython_vst_loader.vst_event import VstEvent" >> test.py
+          echo "from cython_vst_loader.vst_host import VstHost" >> test.py
+          echo "pointer = allocate_float_buffer(10, 12.345)" >> test.py
+          echo "print(str(pointer))" >> test.py
+          echo "free_buffer(pointer)" >> test.py
+          echo "host=VstHost(44100,512)" >> test.py
+          echo "print('all good')" >> test.py
+
+      - name: inspecting test script
+        run: cat test.py
+
+      - name: running test script
+        run: python test.py

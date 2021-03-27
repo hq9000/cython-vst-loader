@@ -1,0 +1,59 @@
+name: test published packages
+
+on:
+  push:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test_installing_from_pypi:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python_version: [3.7, 3.8, 3.9]
+        os: [ ubuntu-latest, windows-latest ]
+    steps:
+      - name: hello world
+        run: echo "hello-world ${{ matrix.python-version }}"
+      - name: Set up
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pip
+        run: python -m pip install --upgrade pip
+      - name: inspect github.ref
+        run: echo ${{ github.ref }}
+
+      - name: extracting tag
+        run: echo "::set-output name=version::$(echo ${{ github.ref }} | awk -F "/" '{print $3}')"
+        id: extract_version
+
+      - name: inspecting output
+        run: echo ${{ steps.extract_version.outputs.version }}
+
+      - name: installing package from test pypi
+
+        # change the version here!!!!
+        run: pip install --index-url https://test.pypi.org/simple/ 'cython-vst-loader==0.3.dev7'
+
+      - name: preparing test script
+        run: |
+          echo "from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer, get_float_buffer_as_list, free_buffer, allocate_double_buffer, get_double_buffer_as_list" >> test.py
+          echo "from cython_vst_loader.exceptions import CythonVstLoaderException" >> test.py
+          echo "from cython_vst_loader.vst_constants import VstAEffectFlags" >> test.py
+          echo "from cython_vst_loader.vst_event import VstEvent" >> test.py
+          echo "from cython_vst_loader.vst_host import VstHost" >> test.py
+
+          echo "pointer = allocate_float_buffer(10, 12.345)" >> test.py
+          echo "print(str(pointer))" >> test.py
+          echo "free_buffer(pointer)" >> test.py
+          echo "host=VstHost(44100,512)" >> test.py
+          echo "print('all good')" >> test.py
+
+      - name: inspecting test script
+        run: cat test.py
+
+      - name: running test script
+        run: python test.py

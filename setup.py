@@ -2,6 +2,7 @@
 import setuptools
 from pathlib import Path
 import os
+import os.path
 
 from setuptools import Extension
 
@@ -15,12 +16,18 @@ except ImportError:
 
 this_directory = Path(__file__).parents[0]
 
-os.system("make")
+if not os.path.exists(this_directory.as_posix() + "/build/vstsdk/pluginterfaces"):
+    os.system("make")
 
 include_paths = [
     this_directory.as_posix() + "/build/vstsdk/pluginterfaces/vst2.x",
     this_directory.as_posix() + "/cython_vst_loader/include"
 ]
+
+
+def is_windows():
+    return os.name == 'nt'
+
 
 if USE_CYTHON:
     ext_modules = cythonize(
@@ -35,20 +42,25 @@ else:
 # workaround for https://github.com/cython/cython/issues/1480
 for module in ext_modules:
     module.include_dirs = include_paths
-    module.extra_compile_args = [
-        "-Wno-unused-function"
-    ]
+
+    if not is_windows():
+        module.extra_compile_args = [
+            "-Wno-unused-function"
+        ]
+
 with open(str(this_directory) + '/README.md', encoding='utf-8') as f:
     long_description = f.read()
-
-with open(str(this_directory) + '/version.txt', encoding='utf-8') as f:
-    version = f.read()
 
 setuptools.setup(
     ext_modules=ext_modules,
     name='cython_vst_loader',
-    packages=['cython_vst_loader'],
-    version=version,
+    packages=setuptools.find_packages(exclude=("tests",)),
+    use_scm_version={
+        "root": ".",
+        "relative_to": __file__,
+        "local_scheme": "node-and-timestamp"
+    },
+    setup_requires=['setuptools_scm'],
     license='MIT',
     description='a cython-based loader for VST audio plugins providing a clean python object-oriented interface',
     long_description=long_description,
@@ -63,5 +75,7 @@ setuptools.setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9'
     ],
 )

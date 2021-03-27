@@ -125,7 +125,7 @@ class AEffectOpcodes:
     https://github.com/simlmx/pyvst/blob/ded9ff373f37d1cbe8948ccb053ff4849f45f4cb/pyvst/vstwrap.py#L11
     in SDK it is declared as enum AEffectOpcodes
     with a comment "Basic dispatcher Opcodes (Host to Plug-in)"
-    Apparently, a better name would be PluginToHostDispatcherOpcodes, but let's keep it
+    Apparently, a better name would be HostToPluginDispatcherOpcodes, but let's keep it
     like it is to keep it aligned with sdk
     """
 
@@ -347,3 +347,14 @@ class VstAEffectFlags:
     # DECLARE_VST_DEPRECATED (effFlagsExtIsAsync)   = 1 << 10,
     # \deprecated deprecated in VST 2.4
     # DECLARE_VST_DEPRECATED (effFlagsExtHasBuffer) = 1 << 11
+
+
+class VstProcessLevels:
+    """
+    see enum VstProcessLevels in aeffectx.h
+    """
+    kVstProcessLevelUnknown = 0  # ///< not supported by Host
+    kVstProcessLevelUser = 1  # // 1: currently in user thread (GUI)
+    kVstProcessLevelRealtime = 2  # ///< 2: currently in audio thread (where process is called)
+    kVstProcessLevelPrefetch = 3  # //< 3: currently in 'sequencer' thread (MIDI, timer etc)
+    kVstProcessLevelOffline = 4  # //< 4: currently offline processing and thus in user thread
