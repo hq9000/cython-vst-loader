@@ -210,6 +210,8 @@ jobs:
         id: extract_version
       - name: inspecting output
         run: echo ${{ steps.extract_version.outputs.version }}
+      - name: sleeping for 30s
+        run: sleep 30
       - name: installing package from test pypi
         if: ${{ contains(github.ref, 'dev') }}
         run: pip install --index-url https://test.pypi.org/simple/ 'cython-vst-loader==${{ steps.extract_version.outputs.version }}'
