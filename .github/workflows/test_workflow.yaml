@@ -1,0 +1,18 @@
+name: test workflow
+
+on:
+  push:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test_installing_from_pypi:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [3.7, 3.8, 3.9]
+    steps:
+      - name: hello world
+        run: echo "hello-world ${{ matrix.python_version }}"
