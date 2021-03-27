@@ -38,8 +38,12 @@ jobs:
 
       - name: preparing test script
         run: |
-          echo "print('hello world')" >> test.py
-          echo "print('hello again')"  >> test.py
+          echo "from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer, get_float_buffer_as_list, free_buffer, allocate_double_buffer, get_double_buffer_as_list" >> test.py
+          echo "pointer = allocate_float_buffer(10, 12.345)" >> test.py
+          echo "print('all good')"  >> test.py
+
+      - name: inspecting test script
+        run: cat test.py
 
       - name: running test script
         run: python test.py
