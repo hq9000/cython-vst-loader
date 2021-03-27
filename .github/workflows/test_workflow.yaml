@@ -32,3 +32,6 @@ jobs:
 
       - name: inspecting output
         run: echo ${{ steps.extract_version.outputs.version }}
+
+      - name: installing package from test pypi
+        run: pip install --index-url https://test.pypi.org/simple/ 'cython-vst-loader==0.3.dev5'
