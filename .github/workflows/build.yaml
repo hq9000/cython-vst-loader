@@ -155,7 +155,7 @@ jobs:
 
     # making a release if this version is tagged
     # https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions
-    if: contains(github.ref, "refs/tags/")
+    if: ${{ contains(github.ref, 'refs/tags/') }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up python 3.7
