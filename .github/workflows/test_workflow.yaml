@@ -35,3 +35,11 @@ jobs:
 
       - name: installing package from test pypi
         run: pip install --index-url https://test.pypi.org/simple/ 'cython-vst-loader==0.3.dev5'
+
+      - name: preparing test script
+        run: |
+          echo "print('hello world')" >> test.py
+          echo "print('hello again')"  >> test.py
+
+      - name: running test script
+        run: python test.py
