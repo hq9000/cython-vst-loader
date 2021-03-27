@@ -31,18 +31,14 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         pip install flake8
         pip install -r requirements.txt
-    - name: Cache VSTSDK archive
-      id: vst-sdk-archive-cache
-      uses: actions/cache@v2
-      with:
-        path: build/vstsdk.zip
-        key: vstsdk_cache
     - name: Cache VSTSDK
       id: vst-sdk-cache
       uses: actions/cache@v2
       with:
         path: build/vstsdk
         key: uncompressed_vstsdk_cache
+        restore-keys: |
+          uncompressed_vstsdk_cache
     - name: Build Cython module
       run: |
         python setup.py build_ext --inplace
@@ -195,12 +191,11 @@ jobs:
 
   test_installing_from_pypi:
     needs: [ release ]
+    runs-on: linux-latest
     strategy:
       matrix:
-        os: [windows-latest, linux-latest]
         python_version: [3.7, 3.8, 3.9]
-    runs-on: ${{ matrix.os }}
     steps:
     - name: hello world
-      run: echo "hello-world"
+      run: echo "hello-world ${{ matrix.python_version }}"
 
