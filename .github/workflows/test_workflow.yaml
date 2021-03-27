@@ -34,13 +34,22 @@ jobs:
         run: echo ${{ steps.extract_version.outputs.version }}
 
       - name: installing package from test pypi
-        run: pip install --index-url https://test.pypi.org/simple/ 'cython-vst-loader==0.3.dev5'
+        run: pip install --index-url https://test.pypi.org/simple/ 'cython-vst-loader==0.3.dev7'
 
       - name: preparing test script
         run: |
           echo "from cython_vst_loader.vst_loader_wrapper import allocate_float_buffer, get_float_buffer_as_list, free_buffer, allocate_double_buffer, get_double_buffer_as_list" >> test.py
+          echo "from cython_vst_loader.exceptions import CythonVstLoaderException" >> test.py
+          echo "from cython_vst_loader.vst_constants import VstAEffectFlags" >> test.py
+          echo "from cython_vst_loader.vst_event import VstEvent" >> test.py
+          echo "from cython_vst_loader.vst_host import VstHost" >> test.py
+
           echo "pointer = allocate_float_buffer(10, 12.345)" >> test.py
-          echo "print('all good')"  >> test.py
+          echo "print(str(pointer))" >> test.py
+          echo "free_buffer(pointer)" >> test.py
+          echo "host=VstHost(44100,512)" >> test.py
+          echo "print('all good')" >> test.py
+
 
       - name: inspecting test script
         run: cat test.py
